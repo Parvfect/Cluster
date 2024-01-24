@@ -276,19 +276,22 @@ def generate_run_save_file(n_motifs, n_picks, dv, dc, k, n, L, M, motifs, symbol
     plt.show()
 
 if __name__ == "__main__":
-    with Profile() as prof:
-        n_motifs, n_picks = 8, 4
-        dv, dc, ffdim = 3, 9, 67
-        k, n = 100 ,150
-        L, M = 6, 6
-        read_length = 6
-        read_lengths = np.arange(1,12)
-        run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, code_class="sc_", read_lengths=read_lengths, saved_code=False)
+    #with Profile() as prof:
+    n_motifs, n_picks = 8, 4
+    dv, dc, ffdim = 3, 9, 67
+    k, n = 100 ,150
+    L, M = 6, 6
+    read_length = 6
+    read_lengths = np.arange(1,12)
+    run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, code_class="sc_", read_lengths=read_lengths, saved_code=False)
+    
+    """
     (
         Stats(prof)
         .strip_dirs()
         .sort_stats("cumtime")
         .print_stats(10)
     )
+    """
 
     

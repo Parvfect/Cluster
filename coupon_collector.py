@@ -12,7 +12,7 @@ from itertools import combinations
 from pstats import Stats
 import re
 from cProfile import Profile
-from tqdm import tqdm
+#from tqdm import tqdm
 import matplotlib.pyplot as plt
 from protograph_interface import get_Harr_sc_ldpc, get_dv_dc
 import sys
@@ -173,9 +173,9 @@ def decoding_errors_fer(k, n, dv, dc, graph, C, symbols, motifs, n_picks, read_l
     max_iterations = max_iterations
     decoding_failures_parameter = decoding_failures_parameter # But can be adjusted as a parameter
 
-    for i in tqdm(read_lengths):
+    for i in read_lengths:
         decoding_failures, iterations, counter = 0, 0, 0
-        for j in tqdm(range(max_iterations)):
+        for j in range(max_iterations):
             # Assigning values to Variable Nodes after generating erasures in zero array
             symbols_read = read_symbols(C, i, symbols, motifs, n_picks)
             if not uncoded:

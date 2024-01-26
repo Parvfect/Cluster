@@ -280,7 +280,7 @@ if __name__ == "__main__":
     n_motifs, n_picks = 8, 4
     dv, dc, ffdim = 3, 9, 67
     k, n = 100 ,150
-    L, M = 10, 5000
+    L, M = 10, 1002
     read_length = 6
     read_lengths = np.arange(1,12)
     run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, code_class="sc_", read_lengths=read_lengths, saved_code=False)

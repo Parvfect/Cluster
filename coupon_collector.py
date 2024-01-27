@@ -12,7 +12,8 @@ from itertools import combinations
 from pstats import Stats
 import re
 from cProfile import Profile
-#from tqdm import tqdm
+from tqdm import tqdm
+import time
 import matplotlib.pyplot as plt
 from protograph_interface import get_Harr_sc_ldpc, get_dv_dc
 import sys
@@ -132,33 +133,32 @@ def get_parameters_sc_ldpc(n_motifs, n_picks, L, M, dv, dc, k, n, ffdim, display
     
     if Harr is None:
         Harr, dv, dc, k, n = get_Harr_sc_ldpc(L, M, dv, dc)
-        print("Harr created")
+        print(f"Harr created {time.time()}")
     else:
         dv, dc = get_dv_dc(dv, dc, k, n, Harr)
     
     graph = VariableTannerGraph(dv, dc, k, n, ffdim=ffdim)
     graph.establish_connections(Harr)
-    print("Graph Created")
+    print(f"Graph Created {time.time()}")
 
     if H is None and G is None:
         H = r.get_H_matrix_sclpdc(dv, dc, k, n, Harr)
+        print(f"H created {time.time()}")
         
-        print(np.linalg.matrix_rank(H))
-        print(H.shape)
-        #print(H.rank)
-        G = r.parity_to_generator(H, ffdim=ffdim)
-        print(G.shape)
-        G1 = r.alternative_parity_to_generator(H, ffdim=ffdim)
-        print(G1.shape)
+        #G = r.parity_to_generator(H, ffdim=ffdim)
+        #print(f"G created {time.time()}")
 
+    """
     if np.any(np.dot(G, H.T) % ffdim != 0):
         print("Matrices are not valid, aborting simulation")
         exit()
-
+    """
+        
     input_arr = [random.choice(symbol_keys) for i in range(k)]
 
     # Encode the input array
-    C = np.dot(input_arr, G) % ffdim
+    #C = np.dot(input_arr, G) % ffdim
+    C = np.zeros(n, dtype=int)
 
     # Check if codeword is valid
     if np.any(np.dot(C, H.T) % ffdim != 0):
@@ -196,13 +196,14 @@ def decoding_errors_fer(k, n, dv, dc, graph, C, symbols, motifs, n_picks, read_l
                 decoding_failures+=1
 
             iterations += 1
+            print(f"Decoding Iteration {j} {time.time()}")
             
             if decoding_failures == decoding_failures_parameter:
                 break
 
         assert counter == (iterations - decoding_failures)
         error_rate = (iterations - counter)/iterations
-        print(f"Error rate = {error_rate}, Read Length = {i}")
+        print(f"Error rate = {error_rate}, Read Length = {i}, {time.time()}")
         frame_error_rate.append(error_rate)
     
     plt.plot(read_lengths, frame_error_rate, 'o')
@@ -280,6 +281,7 @@ def generate_run_save_file(n_motifs, n_picks, dv, dc, k, n, L, M, motifs, symbol
 
 if __name__ == "__main__":
     #with Profile() as prof:
+    print(f"Startime {time.time()}")
     n_motifs, n_picks = 8, 4
     dv, dc, ffdim = 3, 9, 67
     k, n = 100 ,150

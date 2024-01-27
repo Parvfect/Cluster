@@ -131,12 +131,14 @@ def get_parameters_sc_ldpc(n_motifs, n_picks, L, M, dv, dc, k, n, ffdim, display
     symbol_keys = np.arange(0, ffdim)
     
     if Harr is None:
-        Harr, dv, dc, k, n = get_Harr_sc_ldpc(L, M, dv, dc)   
+        Harr, dv, dc, k, n = get_Harr_sc_ldpc(L, M, dv, dc)
+        print("Harr created")
     else:
         dv, dc = get_dv_dc(dv, dc, k, n, Harr)
     
     graph = VariableTannerGraph(dv, dc, k, n, ffdim=ffdim)
     graph.establish_connections(Harr)
+    print("Graph Created")
 
     if H is None and G is None:
         H = r.get_H_matrix_sclpdc(dv, dc, k, n, Harr)
@@ -200,6 +202,7 @@ def decoding_errors_fer(k, n, dv, dc, graph, C, symbols, motifs, n_picks, read_l
 
         assert counter == (iterations - decoding_failures)
         error_rate = (iterations - counter)/iterations
+        print(f"Error rate = {error_rate}, Read Length = {i}")
         frame_error_rate.append(error_rate)
     
     plt.plot(read_lengths, frame_error_rate, 'o')

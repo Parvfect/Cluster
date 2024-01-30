@@ -18,6 +18,10 @@ import matplotlib.pyplot as plt
 from protograph_interface import get_Harr_sc_ldpc, get_dv_dc
 import sys
 
+startime = 0
+
+def timestamp():
+    return time.time() - startime
 
 def choose_symbols(n_motifs, picks):
     """ Returns Symbol Dictionary given the motifs and the number of picks """
@@ -91,7 +95,7 @@ def get_parameters(n_motifs, n_picks, dv, dc, k, n, ffdim, display=True, Harr=No
     
     symbol_keys = np.arange(0, ffdim)
 
-    graph = TannerGraph(dv, dc, k, n, ffdim=ffdim)
+    graph = VariableTannerGraph(dv, dc, k, n, ffdim=ffdim)
 
     if Harr is None:
         Harr = r.get_H_arr(dv, dc, k, n)
@@ -133,20 +137,20 @@ def get_parameters_sc_ldpc(n_motifs, n_picks, L, M, dv, dc, k, n, ffdim, display
     
     if Harr is None:
         Harr, dv, dc, k, n = get_Harr_sc_ldpc(L, M, dv, dc)
-        print(f"Harr created {time.time()}")
+        print(f"Harr created {timestamp()}")
     else:
         dv, dc = get_dv_dc(dv, dc, k, n, Harr)
     
     graph = VariableTannerGraph(dv, dc, k, n, ffdim=ffdim)
     graph.establish_connections(Harr)
-    print(f"Graph Created {time.time()}")
+    print(f"Graph Created {timestamp()}")
 
     if H is None and G is None:
         H = r.get_H_matrix_sclpdc(dv, dc, k, n, Harr)
-        print(f"H created {time.time()}")
+        print(f"H created {timestamp()}")
         
         #G = r.parity_to_generator(H, ffdim=ffdim)
-        #print(f"G created {time.time()}")
+        #print(f"G created {timestamp()}")
 
     """
     if np.any(np.dot(G, H.T) % ffdim != 0):
@@ -168,7 +172,7 @@ def get_parameters_sc_ldpc(n_motifs, n_picks, L, M, dv, dc, k, n, ffdim, display
     return Harr, H, G, graph, C, symbols, motifs, k, n
 
 
-def decoding_errors_fer(k, n, dv, dc, graph, C, symbols, motifs, n_picks, read_lengths = np.arange(1,12), decoding_failures_parameter=50, max_iterations=500000, iterations=50, uncoded=False, bec_decode=False, label=None, code_class=""):
+def decoding_errors_fer(k, n, dv, dc, graph, C, symbols, motifs, n_picks, read_lengths = np.arange(1,12), decoding_failures_parameter=10, max_iterations=100, iterations=50, uncoded=False, bec_decode=False, label=None, code_class=""):
     """ Returns the frame error rate curve - for same H, same G, same C"""
 
     frame_error_rate = []
@@ -196,14 +200,16 @@ def decoding_errors_fer(k, n, dv, dc, graph, C, symbols, motifs, n_picks, read_l
                 decoding_failures+=1
 
             iterations += 1
-            print(f"Decoding Iteration {j} {time.time()}")
+            #print(f"Decoding Iteration {j} {timestamp()}")
             
             if decoding_failures == decoding_failures_parameter:
                 break
+            
+            #return []
 
         assert counter == (iterations - decoding_failures)
         error_rate = (iterations - counter)/iterations
-        print(f"Error rate = {error_rate}, Read Length = {i}, {time.time()}")
+        print(f"Error rate = {error_rate}, Read Length = {i}, {timestamp()}")
         frame_error_rate.append(error_rate)
     
     plt.plot(read_lengths, frame_error_rate, 'o')
@@ -228,11 +234,12 @@ def run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, read_lengths=np.arange
     if code_class == "sc_":
         Harr, H, G, graph, C, symbols, motifs, k, n = get_parameters_sc_ldpc(n_motifs, n_picks, L, M, dv, dc, k, n, ffdim, display=False, Harr=Harr, H=H, G=G)
     else:
-        Harr, H, G, graph, C, symbols, motifs = get_parameters(n_motifs, n_picks, dv, dc, k, n, ffdim, display=False, Harr =Harr, H=H, G=G)
+        Harr, H, G, graph, C, symbols, motifs = get_parameters(n_motifs, n_picks, dv, dc, k, n, ffdim, display=False, Harr=Harr, H=H, G=G)
     
     fer = decoding_errors_fer(k, n, dv, dc, graph, C, symbols, motifs, n_picks, read_lengths=read_lengths, iterations=iterations, label=f'CC Decoder', code_class=code_class)
     label = 'Coupon Collector'
     
+    #return
     if bec_decoder:
         fer = decoding_errors_fer(k, n, dv, dc, graph, C, symbols, motifs, n_picks, read_lengths=read_lengths, iterations=iterations, bec_decode=True, label=f'BEC Decoder', code_class=code_class)
         label = "BEC"
@@ -280,23 +287,22 @@ def generate_run_save_file(n_motifs, n_picks, dv, dc, k, n, L, M, motifs, symbol
     plt.show()
 
 if __name__ == "__main__":
-    #with Profile() as prof:
-    print(f"Startime {time.time()}")
-    n_motifs, n_picks = 8, 4
-    dv, dc, ffdim = 3, 9, 67
-    k, n = 100 ,150
-    L, M = 10, 5001
-    read_length = 6
-    read_lengths = np.arange(1,12)
-    run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, code_class="sc_", read_lengths=read_lengths, saved_code=False)
-    
-    """
-    (
-        Stats(prof)
-        .strip_dirs()
-        .sort_stats("cumtime")
-        .print_stats(10)
-    )
-    """
-
-    
+    with Profile() as prof:
+        startime = time.time()
+        n_motifs, n_picks = 8, 4
+        dv, dc, ffdim = 3, 9, 67
+        k, n = 100 ,150
+        L, M = 10, 5001
+        read_length = 6
+        read_lengths = np.arange(1,12)
+        run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, code_class="", read_lengths=read_lengths, saved_code=False)
+        
+        
+        (
+            Stats(prof)
+            .strip_dirs()
+            .sort_stats("cumtime")
+            .print_stats(10)
+        )
+        
+        

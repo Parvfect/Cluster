@@ -19,8 +19,8 @@ def permuter(arr, ffield, vn_value):
         for k in possibilities:
             for j in arr[i]:
                 new_possibilities.add((j+k) % ffield)
-                if len(new_possibilities) == ffield:
-                    return vn_value
+            if len(new_possibilities) == ffield:
+                return vn_value
         possibilities = new_possibilities 
         new_possibilities = set()
     
@@ -312,6 +312,7 @@ class VariableTannerGraph:
         unresolved_vns = sum([1 for i in self.vns if len(i.value) > 1 ])
         resolved_vns = 0
         total_possibilites = sum([len(i.value) for i in self.vns])
+        decoded_values = [i.value for i in self.vns]
         
         while True:
             # Iterating through all the check nodes
@@ -327,8 +328,8 @@ class VariableTannerGraph:
                     vals.remove(current_value)
 
                     possibilites = permuter(vals, self.ffdim, current_value)
-                    new_values = set(current_value).intersection(set(possibilites))
-                    self.vns[j].value = list(new_values)
+                    new_values = list(set(current_value).intersection(set(possibilites)))
+                    self.vns[j].value = new_values
                     
                     """
                     if len(new_values) < len(current_value) and len(possibilites) > 1:
@@ -336,9 +337,8 @@ class VariableTannerGraph:
                     """
                     if len(current_value) > 1 and len(new_values) == 1:
                         resolved_vns += 1
+                        decoded_values[self.vns[j].identifier] = new_values
                     
-                decoded_values = [i.value for i in self.vns] # Can I have a pointer to replace this?
-
                 if unresolved_vns ==  resolved_vns and sum([len(i) for i in decoded_values]) == len(decoded_values):
                     return np.array([i.value for i in self.vns])
             

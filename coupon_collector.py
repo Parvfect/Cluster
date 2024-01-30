@@ -94,11 +94,9 @@ def simulate_reads(C, read_length, symbols):
 
 def read_symbols(C, read_length, symbols, motifs, picks):
     reads = simulate_reads(C, read_length, symbols)
-    symbol_poss_1 = get_possible_symbols_(reads)
     #symbol_poss_2 = get_possible_symbols(reads, symbols, motifs, n_picks)
 
-    #print(symbol_poss_1 == symbol_poss_2)
-    return symbol_poss_1
+    return get_possible_symbols_(reads)
 
 
     #return get_possible_symbols_(reads)
@@ -223,12 +221,12 @@ def decoding_errors_fer(k, n, dv, dc, graph, C, symbols, motifs, n_picks, read_l
                 decoding_failures+=1
 
             iterations += 1
-            #print(f"Decoding Iteration {j} {timestamp()}")
+            print(f"Decoding Iteration {j} {timestamp()}")
             
             if decoding_failures == decoding_failures_parameter:
                 break
             
-            #return []
+            return []
 
         assert counter == (iterations - decoding_failures)
         error_rate = (iterations - counter)/iterations
@@ -247,7 +245,7 @@ def decoding_errors_fer(k, n, dv, dc, graph, C, symbols, motifs, n_picks, read_l
 
     return frame_error_rate
 
-def run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, read_lengths=np.arange(1,12), code_class="", iterations=5, bec_decoder=False, uncoded=False, saved_code=False, singular_decoding=True, fer_errors=True):
+def run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, read_lengths=np.arange(1,12), code_class="", iterations=5, bec_decoder=False, uncoded=False, saved_code=False, singular_decoding=True, fer_errors=True, save_file=True):
 
     Harr, H, G = None, None, None
 
@@ -262,7 +260,7 @@ def run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, read_lengths=np.arange
     fer = decoding_errors_fer(k, n, dv, dc, graph, C, symbols, motifs, n_picks, read_lengths=read_lengths, iterations=iterations, label=f'CC Decoder', code_class=code_class)
     label = 'Coupon Collector'
     
-    #return
+    return
     if bec_decoder:
         fer = decoding_errors_fer(k, n, dv, dc, graph, C, symbols, motifs, n_picks, read_lengths=read_lengths, iterations=iterations, bec_decode=True, label=f'BEC Decoder', code_class=code_class)
         label = "BEC"
@@ -271,7 +269,8 @@ def run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, read_lengths=np.arange
         fer = decoding_errors_fer(k, n, dv, dc, graph, C, symbols, motifs, n_picks, read_lengths=read_lengths, iterations=iterations, uncoded=True, label=f'Uncoded', code_class=code_class)
         label = 'Uncoded'
     
-    generate_run_save_file(n_motifs, n_picks, dv,dc, k, n, L, M, motifs, symbols, Harr, H, G, C, ffdim, code_class, fer, read_lengths, label)
+    if save_file:
+        generate_run_save_file(n_motifs, n_picks, dv,dc, k, n, L, M, motifs, symbols, Harr, H, G, C, ffdim, code_class, fer, read_lengths, label)
 
 def generate_run_save_file(n_motifs, n_picks, dv, dc, k, n, L, M, motifs, symbols, Harr, H, G, C, ffdim, code_class, fer, read_lengths, label):
     uid = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(10))
@@ -318,14 +317,14 @@ if __name__ == "__main__":
         L, M = 10, 5001
         read_length = 6
         read_lengths = np.arange(1,12)
-        run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, code_class="", read_lengths=read_lengths, saved_code=False)
+        run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, code_class="sc_", read_lengths=read_lengths, saved_code=False, save_file=False)
         
         
         (
             Stats(prof)
             .strip_dirs()
             .sort_stats("cumtime")
-            .print_stats(10)
+            .print_stats(100)
         )
         
         

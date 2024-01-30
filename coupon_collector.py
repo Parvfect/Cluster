@@ -16,9 +16,12 @@ from tqdm import tqdm
 import time
 import matplotlib.pyplot as plt
 from protograph_interface import get_Harr_sc_ldpc, get_dv_dc
+from symbol_possibilities import get_symbol_possibilites_precomputed
 import sys
 
 startime = 0
+
+symbol_possibilities_precomp = get_symbol_possibilites_precomputed()
 
 def timestamp():
     return time.time() - startime
@@ -38,6 +41,18 @@ def get_symbol_index(symbols, symbol):
     for i in symbols:
         if set(i) == set(symbol):
             return symbols.index(i)
+
+
+def get_possible_symbols_(reads):
+    reads = [set(i) for i in reads]
+    symbol_possibilities = []
+    for motifs_read in reads:
+        symbol_possibilities_ = set(np.arange(0,67))
+        for motif in motifs_read:
+            symbol_possibilities_ = symbol_possibilities_.intersection(symbol_possibilities_precomp[motif])
+        symbol_possibilities.append(list(symbol_possibilities_))
+
+    return symbol_possibilities
 
 def get_possible_symbols(reads, symbols, motifs, n_picks):
     
@@ -79,7 +94,15 @@ def simulate_reads(C, read_length, symbols):
 
 def read_symbols(C, read_length, symbols, motifs, picks):
     reads = simulate_reads(C, read_length, symbols)
-    return get_possible_symbols(reads, symbols, motifs, picks)
+    symbol_poss_1 = get_possible_symbols_(reads)
+    #symbol_poss_2 = get_possible_symbols(reads, symbols, motifs, n_picks)
+
+    #print(symbol_poss_1 == symbol_poss_2)
+    return symbol_poss_1
+
+
+    #return get_possible_symbols_(reads)
+    #return get_possible_symbols(reads, symbols, motifs, picks)
 
 def get_parameters(n_motifs, n_picks, dv, dc, k, n, ffdim, display=True, Harr=None, H=None, G=None):
     """ Returns the parameters for the simulation """

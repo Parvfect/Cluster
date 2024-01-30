@@ -118,6 +118,7 @@ class VariableTannerGraph:
         self.n = n
         self.ffdim = ffdim
         self.links = {}
+        self.vn_values = [i.value for i in self.vns]
 
     def add_link(self, cn_index, vn_index, link_value):
         """ Adds a link to the links data structure """
@@ -336,7 +337,7 @@ class VariableTannerGraph:
                     if len(current_value) > 1 and len(new_values) == 1:
                         resolved_vns += 1
                     
-                decoded_values = [i.value for i in self.vns]
+                decoded_values = [i.value for i in self.vns] # Can I have a pointer to replace this?
 
                 if unresolved_vns ==  resolved_vns and sum([len(i) for i in decoded_values]) == len(decoded_values):
                     return np.array([i.value for i in self.vns])

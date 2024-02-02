@@ -122,18 +122,19 @@ def get_parameters(n_motifs, n_picks, dv, dc, k, n, ffdim, display=True, Harr=No
         Harr = r.get_H_arr(dv, dc, k, n)
         H = r.get_H_Matrix(dv, dc, k, n, Harr)
         #G = r.parity_to_generator(H, ffdim=ffdim)
-        G = r.alternative_parity_to_generator(H, ffdim=ffdim)
+        #G = r.alternative_parity_to_generator(H, ffdim=ffdim)
 
     graph.establish_connections(Harr)
 
-    if np.any(np.dot(G, H.T) % ffdim != 0):
-        print("Matrices are not valid, aborting simulation")
-        exit()
+    #if np.any(np.dot(G, H.T) % ffdim != 0):
+    #    print("Matrices are not valid, aborting simulation")
+    #    exit()
 
     input_arr = [random.choice(symbol_keys) for i in range(k)]
 
     # Encode the input array
-    C = np.dot(input_arr, G) % ffdim
+    #C = np.dot(input_arr, G) % ffdim
+    C = np.zeros(n, dtype=int)
 
     # Check if codeword is valid
     if np.any(np.dot(C, H.T) % ffdim != 0):
@@ -211,11 +212,13 @@ def decoding_errors_fer(k, n, dv, dc, graph, C, symbols, motifs, n_picks, read_l
                     decoded_values = graph.coupon_collector_erasure_decoder()
                 else:
                     decoded_values = graph.coupon_collector_decoding()
+                    #decoded_values = graph.adaptive_coupon_collector_decoding()
             else:
                 decoded_values = symbols_read
             
             if sum([len(i) for i in decoded_values]) == len(decoded_values): # Checks if we have decoded completely
                 if np.all(np.array(decoded_values).T[0] == C):
+                    print("succesful and fast")
                     counter += 1    
             else: 
                 decoding_failures+=1
@@ -313,11 +316,11 @@ if __name__ == "__main__":
         startime = time.time()
         n_motifs, n_picks = 8, 4
         dv, dc, ffdim = 3, 9, 67
-        k, n = 100 ,150
+        k, n = 500 ,1500
         L, M = 50, 1001
         read_length = 6
-        read_lengths = np.arange(9,12)
-        run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, code_class="sc_", read_lengths=read_lengths, saved_code=False, save_file=False)
+        read_lengths = np.arange(11,12)
+        run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, code_class="", read_lengths=read_lengths, saved_code=False, save_file=False)
         
         
         (

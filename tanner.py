@@ -186,11 +186,11 @@ class VariableTannerGraph:
     
     def get_total_possibilities(self):
         """ Returns the total number of possbilities in all the cn's - for the CC Decoder"""
-        return sum([i.total_symbol_possibilites() for i in self.cns])
+        return sum([i.get_total_symbol_possibilities() for i in self.cns])
     
     def get_no_unresolved_vns(self):
         """ Returns the total number of unresolved vns (CC Decoder)"""
-        return len([i for i in self.vns if i.total_symbol_possibilites() > 1])
+        return len([i for i in self.vns if i.get_total_symbol_possibilities() > 1])
     
     def assign_values(self, arr):   
         """Assigns values to the VNs based on input pre decoding """
@@ -317,12 +317,13 @@ class VariableTannerGraph:
         """
         
         unresolved_vns = self.get_no_unresolved_vns()
+        iterations = 0
         resolved_vns = 0
         total_possibilites = self.get_total_possibilities()
+        print(total_possibilites)
         decoded_values = [i.get_value() for i in self.vns]
         
         if total_possibilites >= 67*len(self.vns):
-            print("I Enter here")
             return np.random.rand(2, len(self.vns))
 
         while True:
@@ -339,8 +340,8 @@ class VariableTannerGraph:
 
                     possibilites = permuter(vals, self.ffdim, current_value)
                     new_values = list(set(current_value).intersection(set(possibilites)))
-                    j.value = new_values
-                    
+                    j.change_value(new_values)
+
                     """
                     if len(new_values) < len(current_value) and len(possibilites) > 1:
                         print("I reached here")
@@ -350,11 +351,19 @@ class VariableTannerGraph:
                         decoded_values[j.identifier] = new_values
                     
                 if unresolved_vns ==  resolved_vns and sum([len(i) for i in decoded_values]) == len(decoded_values):
-                    print("I am entering here")
                     return np.array([i.get_value() for i in self.vns])
-                
-            if self.get_total_possibilities() == total_possibilites:
+            
+            print(self.get_total_possibilities())
+            if iterations > 3:
+                print("Puedo entrar")
+                print(unresolved_vns - resolved_vns)
                 return [i.get_value() for i in self.vns]
+            """
+            if self.get_total_possibilities() == total_possibilites:
+                print("Puedo entrar")
+                return [i.get_value() for i in self.vns]
+            """
+            iterations += 1
             
             total_possibilites = self.get_total_possibilities()
             
@@ -368,25 +377,26 @@ class VariableTannerGraph:
         unresolved_vns = self.get_no_unresolved_vns()
         resolved_vns = 0
         total_possibilites = self.get_total_possibilities()
+        decoded_values = [vn.get_value() for vn in self.vns]
         
         # Adding condition - in case we know for sure we cannot decode
         if total_possibilites >= 67*len(self.vns):
-            print("I Enter here")
+            #print("I Enter here")
             return np.random.rand(2, len(self.vns))
 
         iterations = 0
+        #print("Created Value Tree")
+
         while True:
-            print(iterations)
-            # Create ValueTree
+            
             tree = ValueTree(self.cns)
-            print("Value Tree created")
-
+            #print(iterations)
+            #for i in range(len(self.cns)):
             while not tree.is_empty():
-
+                #print("I enter here")   
                 # Get smallest node (check node with least possibilities)
                 cn = tree.remove_smallest_node()
-                #print(cn.total_symbol_possibilites())
-                decoded_values = [vn.get_value() for vn in self.vns]
+                #print(cn.get_total_symbol_possibilites())
                 vn_vals = [vn.get_value() for vn in cn.links]
                     
                 for vn in cn.links:
@@ -397,16 +407,17 @@ class VariableTannerGraph:
                     possibilites = permuter(vals, self.ffdim, current_value)
                     new_values = list(set(current_value).intersection(set(possibilites)))
                     vn.change_value(new_values)
-                    vn.update_possibilites(len(new_values))
-                    
                     
                     if len(current_value) > 1 and len(new_values) == 1:
                         resolved_vns += 1
                         decoded_values[vn.identifier] = new_values
-                        
-                if unresolved_vns==resolved_vns: #and sum([len(i) for i in decoded_values]) == len(decoded_values):
-                    return np.array([i.value for i in self.vns])
-            
+
+                # Adding node back into the tree        
+                #tree.add_node(cn)
+
+            if unresolved_vns==resolved_vns: #and sum([len(i) for i in decoded_values]) == len(decoded_values):
+                return np.array([i.value for i in self.vns])
+        
             # No certainty gained after a whole iteration
             if self.get_total_possibilities() == total_possibilites:
                 return [i.value for i in self.vns]
@@ -414,5 +425,5 @@ class VariableTannerGraph:
             total_possibilites = self.get_total_possibilities()
             
             iterations+=1
-        
+    
         return [i.value for i in self.vns]

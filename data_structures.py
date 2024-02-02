@@ -38,20 +38,21 @@ class CheckNode(Node):
     def __init__(self, dc, identifier, links = None):
         super().__init__(dc, identifier, links = links)
 
-    def get_total_symbol_possibilites(self):
+    def get_total_symbol_possibilities(self):
         links = self.get_links()
-        return sum([i.get_total_symbol_possibilites() for i in links])
+        return sum([i.get_total_symbol_possibilities() for i in links])
     
 class VariableNode(Node):
-    def __init__(self, dv, identifier, value=0):
+    def __init__(self, dv, identifier, value=None):
         super().__init__(dv, identifier, value)
-        self.update_symbol_possibilities(len(value))
+        if value is not None:
+            self.update_symbol_possibilities(len(value))
 
-    def get_total_symbol_possibilites(self):
+    def get_total_symbol_possibilities(self):
         return self.total_symbol_possibilities
     
     def update_symbol_possibilities(self, new_poss):
-        self.total_symbol_possibilites = new_poss
+        self.total_symbol_possibilities = new_poss
     
     def change_value(self, new_value):
         super().change_value(new_value)
@@ -73,7 +74,7 @@ class TreeNode:
         return self.cn
     
     def get_cn_value(self):
-        return self.cn.get_total_symbol_possibilites()
+        return self.cn.get_total_symbol_possibilities()
 
     def get_cn_identifier(self):
         return self.cn.identifier
@@ -129,7 +130,7 @@ class ValueTree:
             return 
         
         ptr = self.root
-        value = cn_node.total_symbol_possibilites()
+        value = cn_node.get_total_symbol_possibilities()
 
         while True:
             ptr_symbol_poss = ptr.get_cn_value()

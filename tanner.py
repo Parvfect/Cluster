@@ -10,6 +10,52 @@ from sklearn.preprocessing import normalize
 from pstats import Stats
 import re
 import sys
+from data_structures import VariableNode, CheckNode, ValueTree, Link
+
+"""
+class Node:
+
+    def __init__(self, no_connections, identifier, value=0):
+        self.value = value
+        self.links = np.zeros(no_connections, dtype=int)
+        self.identifier = identifier
+
+    def add_link(self, node):
+        Adds a link to the node. Throws an error if the node is full 
+        for (i,j) in enumerate(self.links):
+            if not j:
+                self.links[i] = node
+                break
+        
+        return self.links
+    
+    def get_links(self):
+        return self.links
+
+    def replace_link(self, node, index):
+        Replaces a link with another link 
+        self.links[index] = node
+        return self.links
+    
+    def change_value(self, new_value):
+        self.value = new_value
+    
+class CheckNode(Node):
+
+    def __init__(self, dc, identifier):
+        super().__init__(dc, identifier)
+    
+class VariableNode(Node):
+    def __init__(self, dv, identifier, value=0):
+        super().__init__(dv, identifier, value)
+
+    
+class Link(Node):
+    def __init__(self, cn, vn, value):
+        self.cn = cn
+        self.vn = vn
+        self.value = value
+"""
 
 def permuter(arr, ffield, vn_value):
 
@@ -47,53 +93,6 @@ def perform_convolutions(arr_pd):
         pdf = conv_circ(pdf, i)
 
     return pdf
-
-
-class Node:
-
-    def __init__(self, no_connections, identifier):
-        self.value = 0
-        self.links = np.zeros(no_connections, dtype=int)
-        self.identifier = identifier
-
-    def add_link(self, node):
-        """ Adds a link to the node. Throws an error if the node is full """
-        
-        # Check if node is full
-        #if np.all(self.links):
-         #   raise ValueError("Node is full")
-
-        # Add to empty link 
-        for (i,j) in enumerate(self.links):
-            if not j:
-                self.links[i] = node.identifier
-                break
-        
-        return self.links
-    
-    def get_links(self):
-        return self.links
-
-    def replace_link(self, node, index):
-        """ Replaces a link with another link """
-        self.links[index] = node
-        return self.links
-    
-class CheckNode(Node):
-
-    def __init__(self, dc, identifier):
-        super().__init__(dc, identifier)
-    
-class VariableNode(Node):
-    def __init__(self, dv, identifier):
-        super().__init__(dv, identifier)
-
-
-class Link(Node):
-    def __init__(self, cn, vn, value):
-        self.cn = cn
-        self.vn = vn
-        self.value = value
 
 class VariableTannerGraph:
     """ Initializes empty, on establishing connections creates H and forms links """
@@ -136,10 +135,10 @@ class VariableTannerGraph:
         self.links[(cn_index, vn_index)][val_index] = new_value
 
     def get_vn_value(self, vn_index):
-        return self.vns[vn_index].value
+        return self.vns[vn_index].get_value()
 
     def get_cn_value(self, cn_index):
-        return self.cns[cn_index].value
+        return self.cns[cn_index].get_value()
 
     def establish_connections(self, Harr=None):
         """ Establishes connections between variable nodes and check nodes """
@@ -175,7 +174,7 @@ class VariableTannerGraph:
 
     def get_connections(self):
         """ Returns the connections in the Tanner Graph """
-        return [(i.identifier, j) for i in self.cns for j in i.links]
+        return [(i.get_value(), j) for i in self.cns for j in i.links]
 
     def get_cn_link_values(self, cn):
         """ Returns the values of the link weights for the cn as an array"""
@@ -185,13 +184,21 @@ class VariableTannerGraph:
 
         return vals
     
+    def get_total_possibilities(self):
+        """ Returns the total number of possbilities in all the cn's - for the CC Decoder"""
+        return sum([i.total_symbol_possibilites() for i in self.cns])
+    
+    def get_no_unresolved_vns(self):
+        """ Returns the total number of unresolved vns (CC Decoder)"""
+        return len([i for i in self.vns if i.total_symbol_possibilites() > 1])
+    
     def assign_values(self, arr):   
         """Assigns values to the VNs based on input pre decoding """
 
         assert len(arr) == len(self.vns) 
 
         for i in range(len(arr)):
-            self.vns[i].value = arr[i]
+            self.vns[i].change_value(arr[i])
 
     def get_max_prob_codeword(self, P, GF):
         """Calculates the most possible Codeword using the probability likelihoods established in the VN's and influenced by the initial probability likelihoods.
@@ -309,27 +316,30 @@ class VariableTannerGraph:
             utilising Belief Propagation - may be worth doing for BEC as well 
         """
         
-        unresolved_vns = sum([1 for i in self.vns if len(i.value) > 1 ])
+        unresolved_vns = self.get_no_unresolved_vns()
         resolved_vns = 0
-        total_possibilites = sum([len(i.value) for i in self.vns])
-        decoded_values = [i.value for i in self.vns]
+        total_possibilites = self.get_total_possibilities()
+        decoded_values = [i.get_value() for i in self.vns]
         
+        if total_possibilites >= 67*len(self.vns):
+            print("I Enter here")
+            return np.random.rand(2, len(self.vns))
+
         while True:
             # Iterating through all the check nodes
             for i in self.cns:
                 
-                vn_vals = [self.vns[j].value for j in i.links]
+                vn_vals = [j.get_value() for j in i.links]
                 
                 for j in i.links:
                 
                     vals = vn_vals.copy()
-                    current_value = self.vns[j].value
-                    #vals = self.remove_from_array(vals, current_value)
+                    current_value = j.get_value()
                     vals.remove(current_value)
 
                     possibilites = permuter(vals, self.ffdim, current_value)
                     new_values = list(set(current_value).intersection(set(possibilites)))
-                    self.vns[j].value = new_values
+                    j.value = new_values
                     
                     """
                     if len(new_values) < len(current_value) and len(possibilites) > 1:
@@ -337,16 +347,72 @@ class VariableTannerGraph:
                     """
                     if len(current_value) > 1 and len(new_values) == 1:
                         resolved_vns += 1
-                        decoded_values[self.vns[j].identifier] = new_values
+                        decoded_values[j.identifier] = new_values
                     
                 if unresolved_vns ==  resolved_vns and sum([len(i) for i in decoded_values]) == len(decoded_values):
+                    print("I am entering here")
+                    return np.array([i.get_value() for i in self.vns])
+                
+            if self.get_total_possibilities() == total_possibilites:
+                return [i.get_value() for i in self.vns]
+            
+            total_possibilites = self.get_total_possibilities()
+            
+        return [i.value for i in self.vns]
+    
+    def adaptive_coupon_collector_decoding(self, max_iterations=10000):
+        """ Decodes for the case of symbol possiblities for each variable node 
+            utilising Belief Propagation - may be worth doing for BEC as well 
+        """
+        
+        unresolved_vns = self.get_no_unresolved_vns()
+        resolved_vns = 0
+        total_possibilites = self.get_total_possibilities()
+        
+        # Adding condition - in case we know for sure we cannot decode
+        if total_possibilites >= 67*len(self.vns):
+            print("I Enter here")
+            return np.random.rand(2, len(self.vns))
+
+        iterations = 0
+        while True:
+            print(iterations)
+            # Create ValueTree
+            tree = ValueTree(self.cns)
+            print("Value Tree created")
+
+            while not tree.is_empty():
+
+                # Get smallest node (check node with least possibilities)
+                cn = tree.remove_smallest_node()
+                #print(cn.total_symbol_possibilites())
+                decoded_values = [vn.get_value() for vn in self.vns]
+                vn_vals = [vn.get_value() for vn in cn.links]
+                    
+                for vn in cn.links:
+                    vals = vn_vals.copy()
+                    current_value = vn.get_value()
+                    vals.remove(current_value)
+
+                    possibilites = permuter(vals, self.ffdim, current_value)
+                    new_values = list(set(current_value).intersection(set(possibilites)))
+                    vn.change_value(new_values)
+                    vn.update_possibilites(len(new_values))
+                    
+                    
+                    if len(current_value) > 1 and len(new_values) == 1:
+                        resolved_vns += 1
+                        decoded_values[vn.identifier] = new_values
+                        
+                if unresolved_vns==resolved_vns: #and sum([len(i) for i in decoded_values]) == len(decoded_values):
                     return np.array([i.value for i in self.vns])
             
-            if sum([len(i.value) for i in self.vns]) == total_possibilites:
+            # No certainty gained after a whole iteration
+            if self.get_total_possibilities() == total_possibilites:
                 return [i.value for i in self.vns]
             
-            total_possibilites = sum([len(i.value) for i in self.vns])
+            total_possibilites = self.get_total_possibilities()
             
-            prev_resolved_vns = resolved_vns   
+            iterations+=1
         
         return [i.value for i in self.vns]

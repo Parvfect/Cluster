@@ -226,7 +226,7 @@ def decoding_errors_fer(k, n, dv, dc, graph, C, symbols, motifs, n_picks, read_l
             if decoding_failures == decoding_failures_parameter:
                 break
             
-            return []
+            #return []
 
         assert counter == (iterations - decoding_failures)
         error_rate = (iterations - counter)/iterations
@@ -260,7 +260,7 @@ def run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, read_lengths=np.arange
     fer = decoding_errors_fer(k, n, dv, dc, graph, C, symbols, motifs, n_picks, read_lengths=read_lengths, iterations=iterations, label=f'CC Decoder', code_class=code_class)
     label = 'Coupon Collector'
     
-    return
+    #return
     if bec_decoder:
         fer = decoding_errors_fer(k, n, dv, dc, graph, C, symbols, motifs, n_picks, read_lengths=read_lengths, iterations=iterations, bec_decode=True, label=f'BEC Decoder', code_class=code_class)
         label = "BEC"
@@ -314,9 +314,9 @@ if __name__ == "__main__":
         n_motifs, n_picks = 8, 4
         dv, dc, ffdim = 3, 9, 67
         k, n = 100 ,150
-        L, M = 10, 5001
+        L, M = 50, 1001
         read_length = 6
-        read_lengths = np.arange(1,12)
+        read_lengths = np.arange(9,12)
         run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, code_class="sc_", read_lengths=read_lengths, saved_code=False, save_file=False)
         
         

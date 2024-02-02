@@ -9,16 +9,16 @@ class Node:
         if links:
             self.links = links
         else:
-            self.links = np.zeros(no_connections, dtype=int)
-        
+            self.links = [None for i in range(no_connections)]
+
+    def change_value(self, new_value):
+        self.value = new_value    
 
     def add_link(self, node):
         """ Adds a link to the node. Throws an error if the node is full """
-
-        # Add to empty link 
         for (i,j) in enumerate(self.links):
             if not j:
-                self.links[i] = node.identifier
+                self.links[i] = node
                 break   
         return self.links
     
@@ -38,16 +38,24 @@ class CheckNode(Node):
     def __init__(self, dc, identifier, links = None):
         super().__init__(dc, identifier, links = links)
 
-    def total_symbol_possibilites(self):
+    def get_total_symbol_possibilites(self):
         links = self.get_links()
-        return sum([i.total_symbol_possibilites() for i in links])
+        return sum([i.get_total_symbol_possibilites() for i in links])
     
 class VariableNode(Node):
     def __init__(self, dv, identifier, value=0):
         super().__init__(dv, identifier, value)
+        self.update_symbol_possibilities(len(value))
 
-    def total_symbol_possibilites(self):
-        return len(self.get_value())
+    def get_total_symbol_possibilites(self):
+        return self.total_symbol_possibilities
+    
+    def update_symbol_possibilities(self, new_poss):
+        self.total_symbol_possibilites = new_poss
+    
+    def change_value(self, new_value):
+        super().change_value(new_value)
+        self.update_symbol_possibilities(len(new_value))
 
 class Link(Node):
     def __init__(self, cn, vn, value):
@@ -65,7 +73,7 @@ class TreeNode:
         return self.cn
     
     def get_cn_value(self):
-        return self.cn.total_symbol_possibilites()
+        return self.cn.get_total_symbol_possibilites()
 
     def get_cn_identifier(self):
         return self.cn.identifier
@@ -109,6 +117,9 @@ class ValueTree:
     def get_length(self):
         return self.length
     
+    def is_empty(self):
+        return self.root==None or self.length==0
+    
     def add_node(self, cn_node):
 
         self.length += 1
@@ -139,6 +150,7 @@ class ValueTree:
     def remove_smallest_node(self):
         """Using to Traverse tree for bottom to top for CC Decoder """
 
+        self.length-=1
         if self.root == None:
             print("Tree is empty")
             return None
@@ -191,6 +203,3 @@ def testing():
     for i in range(k):
         print(tree.remove_smallest_node().total_symbol_possibilites())
         
-
-
-testing()

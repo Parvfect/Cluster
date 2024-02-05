@@ -320,7 +320,7 @@ class VariableTannerGraph:
         iterations = 0
         resolved_vns = 0
         total_possibilites = self.get_total_possibilities()
-        print(total_possibilites)
+        #print(total_possibilites)
         decoded_values = [i.get_value() for i in self.vns]
         
         if total_possibilites >= 67*len(self.vns):
@@ -353,16 +353,9 @@ class VariableTannerGraph:
                 if unresolved_vns ==  resolved_vns and sum([len(i) for i in decoded_values]) == len(decoded_values):
                     return np.array([i.get_value() for i in self.vns])
             
-            print(self.get_total_possibilities())
-            if iterations > 3:
-                print("Puedo entrar")
-                print(unresolved_vns - resolved_vns)
-                return [i.get_value() for i in self.vns]
-            """
             if self.get_total_possibilities() == total_possibilites:
-                print("Puedo entrar")
+                #print("Puedo entrar")
                 return [i.get_value() for i in self.vns]
-            """
             iterations += 1
             
             total_possibilites = self.get_total_possibilities()
@@ -415,7 +408,7 @@ class VariableTannerGraph:
                 # Adding node back into the tree        
                 #tree.add_node(cn)
 
-            if unresolved_vns==resolved_vns: #and sum([len(i) for i in decoded_values]) == len(decoded_values):
+            if unresolved_vns==resolved_vns:
                 return np.array([i.value for i in self.vns])
         
             # No certainty gained after a whole iteration

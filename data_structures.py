@@ -182,7 +182,7 @@ class ValueTree:
 
 
 def testing():
-    k = 200
+    k = 1000
     n = 400
     t = np.arange(1, n)
 

@@ -194,16 +194,16 @@ def get_parameters_sc_ldpc(n_motifs, n_picks, L, M, dv, dc, k, n, ffdim, display
     return Harr, H, G, graph, C, symbols, motifs, k, n
 
 
-def decoding_errors_fer(k, n, dv, dc, graph, C, symbols, motifs, n_picks, read_lengths = np.arange(1,12), decoding_failures_parameter=10, max_iterations=100, iterations=50, uncoded=False, bec_decode=False, label=None, code_class=""):
+def decoding_errors_fer(k, n, dv, dc, graph, C, symbols, motifs, n_picks, read_lengths = np.arange(1,12), decoding_failures_parameter=10, max_iterations=10000, iterations=50, uncoded=False, bec_decode=False, label=None, code_class=""):
     """ Returns the frame error rate curve - for same H, same G, same C"""
 
     frame_error_rate = []
     max_iterations = max_iterations
     decoding_failures_parameter = decoding_failures_parameter # But can be adjusted as a parameter
 
-    for i in read_lengths:
+    for i in tqdm(read_lengths):
         decoding_failures, iterations, counter = 0, 0, 0
-        for j in range(max_iterations):
+        for j in tqdm(range(max_iterations)):
             # Assigning values to Variable Nodes after generating erasures in zero array
             symbols_read = read_symbols(C, i, symbols, motifs, n_picks)
             if not uncoded:
@@ -218,13 +218,13 @@ def decoding_errors_fer(k, n, dv, dc, graph, C, symbols, motifs, n_picks, read_l
             
             if sum([len(i) for i in decoded_values]) == len(decoded_values): # Checks if we have decoded completely
                 if np.all(np.array(decoded_values).T[0] == C):
-                    print("succesful and fast")
+                    #print("succesful and fast")
                     counter += 1    
             else: 
                 decoding_failures+=1
 
             iterations += 1
-            print(f"Decoding Iteration {j} {timestamp()}")
+            #print(f"Decoding Iteration {j} {timestamp()}")
             
             if decoding_failures == decoding_failures_parameter:
                 break
@@ -317,17 +317,17 @@ if __name__ == "__main__":
         n_motifs, n_picks = 8, 4
         dv, dc, ffdim = 3, 9, 67
         k, n = 500 ,1500
-        L, M = 50, 1001
+        L, M = 15, 81
         read_length = 6
-        read_lengths = np.arange(11,12)
-        run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, code_class="", read_lengths=read_lengths, saved_code=False, save_file=False)
+        read_lengths = np.arange(6,12)
+        run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, code_class="sc_", read_lengths=read_lengths, saved_code=False, save_file=True)
         
         
         (
             Stats(prof)
             .strip_dirs()
             .sort_stats("cumtime")
-            .print_stats(100)
+            .print_stats(10)
         )
         
         

@@ -39,8 +39,11 @@ class CheckNode(Node):
         super().__init__(dc, identifier, links = links)
 
     def get_total_symbol_possibilities(self):
-        links = self.get_links()
-        return sum([i.get_total_symbol_possibilities() for i in links])
+        sum=0
+        for i in self.links:
+            sum+=i.total_symbol_possibilities
+        return sum
+        #return sum([i.total_symbol_possibilities for i in self.links])
     
 class VariableNode(Node):
     def __init__(self, dv, identifier, value=None):

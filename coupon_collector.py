@@ -194,7 +194,7 @@ def get_parameters_sc_ldpc(n_motifs, n_picks, L, M, dv, dc, k, n, ffdim, display
     return Harr, H, G, graph, C, symbols, motifs, k, n
 
 
-def decoding_errors_fer(k, n, dv, dc, graph, C, symbols, motifs, n_picks, read_lengths = np.arange(1,12), decoding_failures_parameter=10, max_iterations=50, iterations=5, uncoded=False, bec_decode=False, label=None, code_class=""):
+def decoding_errors_fer(k, n, dv, dc, graph, C, symbols, motifs, n_picks, read_lengths = np.arange(1,12), decoding_failures_parameter=2, max_iterations=2000, iterations=5, uncoded=False, bec_decode=False, label=None, code_class=""):
     """ Returns the frame error rate curve - for same H, same G, same C"""
 
     frame_error_rate = []
@@ -224,7 +224,7 @@ def decoding_errors_fer(k, n, dv, dc, graph, C, symbols, motifs, n_picks, read_l
                 decoding_failures+=1
 
             iterations += 1
-            #print(f"Decoding Iteration {j} {timestamp()}")
+            print(f"Decoding Iteration {j+1}, succesful iterations {counter} {timestamp()}")
             
             if decoding_failures == decoding_failures_parameter:
                 break
@@ -236,6 +236,7 @@ def decoding_errors_fer(k, n, dv, dc, graph, C, symbols, motifs, n_picks, read_l
         print(f"Error rate = {error_rate}, Read Length = {i}, {timestamp()}")
         frame_error_rate.append(error_rate)
     
+    """
     plt.plot(read_lengths, frame_error_rate, 'o')
     plt.plot(read_lengths, frame_error_rate, label=label)
     plt.title("Frame Error Rate for CC for {}{}-{}  {}-{} for 8C4 Symbols".format(code_class, k, n, dv, dc))
@@ -245,6 +246,7 @@ def decoding_errors_fer(k, n, dv, dc, graph, C, symbols, motifs, n_picks, read_l
     # Displaying final figure
     plt.xlim(read_lengths[0], read_lengths[-1])
     plt.ylim(0,1)
+    """
 
     return frame_error_rate
 
@@ -304,19 +306,21 @@ def generate_run_save_file(n_motifs, n_picks, dv, dc, k, n, L, M, motifs, symbol
 
     print(fer)
 
+    """
     plt.plot(read_lengths, fer)
     plt.xticks(np.arange(read_lengths[0], read_lengths[-1], 1))
     plt.grid()
     plt.legend()
     plt.savefig(f"Run-code-dv-dc-k-n-label={code_class}-{dv}-{dc}-{k}-{n}-{label}{uid}/fer_plot.png")
     plt.show()
+    """
 
 if __name__ == "__main__":
     startime = time.time()
     n_motifs, n_picks = 8, 4
     dv, dc, ffdim = 3, 9, 67
-    k, n = 100 ,150
+    k, n = 1000 ,1500
     L, M = 50, 1002
     read_length = 6
-    read_lengths = np.arange(6,10)
-    run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, code_class="", read_lengths=read_lengths, saved_code=False, save_file=True)
+    read_lengths = np.arange(6,7)
+    run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, code_class="sc_", read_lengths=read_lengths, saved_code=False, save_file=False)

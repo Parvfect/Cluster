@@ -37,12 +37,10 @@ class CheckNode(Node):
 
     def __init__(self, dc, identifier, links = None):
         super().__init__(dc, identifier, links = links)
+        self.total_symbol_possibilities = 0
 
     def get_total_symbol_possibilities(self):
-        sum=0
-        for i in self.links:
-            sum+=i.total_symbol_possibilities
-        return sum
+        return self.total_symbol_possibilities
         #return sum([i.total_symbol_possibilities for i in self.links])
     
 class VariableNode(Node):
@@ -50,6 +48,8 @@ class VariableNode(Node):
         super().__init__(dv, identifier, value)
         if value is not None:
             self.update_symbol_possibilities(len(value))
+        else:
+            self.update_symbol_possibilities(0)
 
     def get_total_symbol_possibilities(self):
         return self.total_symbol_possibilities
@@ -59,7 +59,10 @@ class VariableNode(Node):
     
     def change_value(self, new_value):
         super().change_value(new_value)
-        self.update_symbol_possibilities(len(new_value))
+        for cn in self.links:
+            #print(cn)
+            cn.total_symbol_possibilities+= (len(new_value) - self.total_symbol_possibilities)
+        self.total_symbol_possibilities = len(new_value)
 
 class Link(Node):
     def __init__(self, cn, vn, value):
@@ -68,8 +71,9 @@ class Link(Node):
         self.value = value
 
 class TreeNode:
-    def __init__(self, cn_node, left, right):
+    def __init__(self, cn_node, val, left, right):
         self.cn = cn_node
+        self.val = val
         self.left = left
         self.right = right
     
@@ -77,7 +81,7 @@ class TreeNode:
         return self.cn
     
     def get_cn_value(self):
-        return self.cn.get_total_symbol_possibilities()
+        return self.val
 
     def get_cn_identifier(self):
         return self.cn.identifier
@@ -128,27 +132,28 @@ class ValueTree:
 
         self.length += 1
 
+        value = cn_node.total_symbol_possibilities
+
         if self.root == None:
-            self.root = TreeNode(cn_node, None, None)
+            self.root = TreeNode(cn_node, value, None, None)
             return 
         
         ptr = self.root
-        value = cn_node.get_total_symbol_possibilities()
 
         while True:
-            ptr_symbol_poss = ptr.get_cn_value()
+            ptr_symbol_poss = ptr.val
             if value >= ptr_symbol_poss:
-                if ptr.get_right() is not None:
+                if ptr.right is not None:
                     ptr = ptr.right
                 else:
-                    ptr.add_right(TreeNode(cn_node, None, None))
+                    ptr.right = TreeNode(cn_node, value, None, None)
                     return
                 
-            if value < ptr_symbol_poss:
-                if ptr.get_left() is not None:
+            else:
+                if ptr.left is not None:
                     ptr = ptr.left
                 else:
-                    ptr.add_left(TreeNode(cn_node, None, None))
+                    ptr.left = TreeNode(cn_node, value, None, None)
                     return
         
     def remove_smallest_node(self):
@@ -162,22 +167,26 @@ class ValueTree:
         ptr1 = self.root
         ptr2 = self.root
 
-        if ptr1.get_left() is None:
-            cn_node = self.root.get_cn_node()
-            self.root = ptr1.get_right()
+        if not ptr1.left:
+            cn_node = self.root.cn
+            self.root = ptr1.right
             return cn_node
 
-        while ptr1.has_neighbours():
+        while ptr1.left or ptr1.right:
             ptr2 = ptr1
-            if ptr1.get_left():
-                ptr1 = ptr1.get_left()
+            if ptr1.left:
+                ptr1 = ptr1.left
             else:
-                ptr1 = ptr1.get_right()
+                ptr1 = ptr1.right
         
-        if ptr2.get_left():
-            return ptr2.remove_left()
+        if ptr2.left:
+            cn = ptr2.left.cn
+            ptr2.left = None
+            return cn
         
-        return ptr2.remove_right()
+        cn = ptr2.right.cn
+        ptr2.right = None
+        return cn
     
     def find_vn_node(self, cn_node):
         """Uses both value and identifier to distinguish """

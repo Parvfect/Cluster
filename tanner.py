@@ -341,7 +341,8 @@ class VariableTannerGraph:
                     possibilites = permuter(vals, self.ffdim, current_value)
                     new_values = list(set(current_value).intersection(set(possibilites)))
                     j.change_value(new_values)
-
+                    
+                
                     """
                     if len(new_values) < len(current_value) and len(possibilites) > 1:
                         print("I reached here")

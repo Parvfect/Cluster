@@ -319,8 +319,8 @@ if __name__ == "__main__":
     startime = time.time()
     n_motifs, n_picks = 8, 4
     dv, dc, ffdim = 3, 9, 67
-    k, n = 1000 ,1500
+    k, n = 40, 60
     L, M = 50, 1002
     read_length = 6
     read_lengths = np.arange(6,7)
-    run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, code_class="sc_", read_lengths=read_lengths, saved_code=False, save_file=False)
+    run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, code_class="", read_lengths=read_lengths, saved_code=False, save_file=True)

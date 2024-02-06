@@ -194,7 +194,7 @@ def get_parameters_sc_ldpc(n_motifs, n_picks, L, M, dv, dc, k, n, ffdim, display
     return Harr, H, G, graph, C, symbols, motifs, k, n
 
 
-def decoding_errors_fer(k, n, dv, dc, graph, C, symbols, motifs, n_picks, read_lengths = np.arange(1,12), decoding_failures_parameter=2, max_iterations=2000, iterations=50, uncoded=False, bec_decode=False, label=None, code_class=""):
+def decoding_errors_fer(k, n, dv, dc, graph, C, symbols, motifs, n_picks, read_lengths = np.arange(1,12), decoding_failures_parameter=10, max_iterations=50, iterations=5, uncoded=False, bec_decode=False, label=None, code_class=""):
     """ Returns the frame error rate curve - for same H, same G, same C"""
 
     frame_error_rate = []
@@ -263,7 +263,7 @@ def run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, read_lengths=np.arange
     fer = decoding_errors_fer(k, n, dv, dc, graph, C, symbols, motifs, n_picks, read_lengths=read_lengths, iterations=iterations, label=f'CC Decoder', code_class=code_class)
     label = 'Coupon Collector'
     
-    #return
+    #return 
     if bec_decoder:
         fer = decoding_errors_fer(k, n, dv, dc, graph, C, symbols, motifs, n_picks, read_lengths=read_lengths, iterations=iterations, bec_decode=True, label=f'BEC Decoder', code_class=code_class)
         label = "BEC"
@@ -312,21 +312,19 @@ def generate_run_save_file(n_motifs, n_picks, dv, dc, k, n, L, M, motifs, symbol
     plt.show()
 
 if __name__ == "__main__":
-    #with Profile() as prof:
-    startime = time.time()
-    n_motifs, n_picks = 8, 4
-    dv, dc, ffdim = 3, 9, 67
-    k, n = 500 ,1500
-    L, M = 50, 1001
-    read_length = 6
-    read_lengths = np.arange(6,7)
-    run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, code_class="sc_", read_lengths=read_lengths, saved_code=False, save_file=False)
+    with Profile() as prof:
+        startime = time.time()
+        n_motifs, n_picks = 8, 4
+        dv, dc, ffdim = 3, 9, 67
+        k, n = 100 ,150
+        L, M = 50, 1002
+        read_length = 6
+        read_lengths = np.arange(6,10)
+        run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, code_class="", read_lengths=read_lengths, saved_code=False, save_file=True)
 
-    """
-        (
-            Stats(prof)
-            .strip_dirs()
-            .sort_stats("cumtime")
-            .print_stats(10)
-        )
-    """
+    (
+        Stats(prof)
+        .strip_dirs()
+        .sort_stats("cumtime")
+        .print_stats(10)
+    )

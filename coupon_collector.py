@@ -312,19 +312,11 @@ def generate_run_save_file(n_motifs, n_picks, dv, dc, k, n, L, M, motifs, symbol
     plt.show()
 
 if __name__ == "__main__":
-    with Profile() as prof:
-        startime = time.time()
-        n_motifs, n_picks = 8, 4
-        dv, dc, ffdim = 3, 9, 67
-        k, n = 100 ,150
-        L, M = 50, 1002
-        read_length = 6
-        read_lengths = np.arange(6,10)
-        run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, code_class="", read_lengths=read_lengths, saved_code=False, save_file=True)
-
-    (
-        Stats(prof)
-        .strip_dirs()
-        .sort_stats("cumtime")
-        .print_stats(10)
-    )
+    startime = time.time()
+    n_motifs, n_picks = 8, 4
+    dv, dc, ffdim = 3, 9, 67
+    k, n = 100 ,150
+    L, M = 50, 1002
+    read_length = 6
+    read_lengths = np.arange(6,10)
+    run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, code_class="", read_lengths=read_lengths, saved_code=False, save_file=True)

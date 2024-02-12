@@ -188,6 +188,16 @@ class ValueTree:
         ptr2.right = None
         return cn
     
+    def remove_node(self, cn_node):
+        """Removes the node with the same value and identifier """
+        symbol_poss = cn_node.total_symbol_possibilites
+            
+        def recursive_search(root, cn_node, symbol_poss):
+            if root.left is cn_node:
+                ptr = root.left
+                
+
+
     def find_vn_node(self, cn_node):
         """Uses both value and identifier to distinguish """
         return

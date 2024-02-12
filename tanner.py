@@ -363,6 +363,17 @@ class VariableTannerGraph:
             
         return [i.value for i in self.vns]
     
+    def remove_changed_nodes(tree, vn, original_cn):
+        """Removes all the CNs that are not the originial from the tree, as the VNs symbol possibilities has been updated
+        """
+
+        for cn in vn.links:
+            if cn is original_cn:
+                continue
+            tree.remove_node(cn)
+        return tree
+
+
     def adaptive_coupon_collector_decoding(self, max_iterations=10000):
         """ Decodes for the case of symbol possiblities for each variable node 
             utilising Belief Propagation - may be worth doing for BEC as well 
@@ -387,10 +398,7 @@ class VariableTannerGraph:
             #print(iterations)
             #for i in range(len(self.cns)):
             while not tree.is_empty():
-                #print("I enter here")   
-                # Get smallest node (check node with least possibilities)
                 cn = tree.remove_smallest_node()
-                #print(cn.get_total_symbol_possibilites())
                 vn_vals = [vn.get_value() for vn in cn.links]
                     
                 for vn in cn.links:
@@ -401,6 +409,7 @@ class VariableTannerGraph:
                     possibilites = permuter(vals, self.ffdim, current_value)
                     new_values = list(set(current_value).intersection(set(possibilites)))
                     vn.change_value(new_values)
+                    remove_changed_nodes(tree, vn, cn)
                     
                     if len(current_value) > 1 and len(new_values) == 1:
                         resolved_vns += 1

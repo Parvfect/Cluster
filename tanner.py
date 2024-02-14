@@ -12,52 +12,9 @@ import re
 import sys
 from data_structures import VariableNode, CheckNode, ValueTree, Link
 
-"""
-class Node:
-
-    def __init__(self, no_connections, identifier, value=0):
-        self.value = value
-        self.links = np.zeros(no_connections, dtype=int)
-        self.identifier = identifier
-
-    def add_link(self, node):
-        Adds a link to the node. Throws an error if the node is full 
-        for (i,j) in enumerate(self.links):
-            if not j:
-                self.links[i] = node
-                break
-        
-        return self.links
-    
-    def get_links(self):
-        return self.links
-
-    def replace_link(self, node, index):
-        Replaces a link with another link 
-        self.links[index] = node
-        return self.links
-    
-    def change_value(self, new_value):
-        self.value = new_value
-    
-class CheckNode(Node):
-
-    def __init__(self, dc, identifier):
-        super().__init__(dc, identifier)
-    
-class VariableNode(Node):
-    def __init__(self, dv, identifier, value=0):
-        super().__init__(dv, identifier, value)
-
-    
-class Link(Node):
-    def __init__(self, cn, vn, value):
-        self.cn = cn
-        self.vn = vn
-        self.value = value
-"""
 
 def permuter(arr, ffield, vn_value):
+    """Permutes the VNs to generate symbol possibilities """
 
     possibilities = set(arr[0])
     new_possibilities = set()
@@ -367,14 +324,16 @@ class VariableTannerGraph:
         """Removes all the CNs that are not the originial from the tree, as the VNs symbol possibilities has been updated
         """
 
+        changed_nodes = []
         for cn in vn.links:
             if cn is original_cn:
                 continue
+            changed_nodes.append(cn)
             tree.remove_node(cn)
-        return tree
+        return tree, changed_nodes
 
 
-    def adaptive_coupon_collector_decoding(self, max_iterations=10000):
+    def adaptive_coupon_collector_decoding(self, depth=20, max_iterations=10000):
         """ Decodes for the case of symbol possiblities for each variable node 
             utilising Belief Propagation - may be worth doing for BEC as well 
         """
@@ -393,11 +352,15 @@ class VariableTannerGraph:
         #print("Created Value Tree")
 
         while True:
-            
-            tree = ValueTree(self.cns)
+            if tree.root is not None:
+                for i in cns_explored:
+                    tree.add_node(i)
+            else:
+                tree = ValueTree(self.cns)
             #print(iterations)
             #for i in range(len(self.cns)):
-            while not tree.is_empty():
+            cns_explored = []
+            while not tree.is_empty() and len(cns_explored) < depth: # Change this condition to depth
                 cn = tree.remove_smallest_node()
                 vn_vals = [vn.get_value() for vn in cn.links]
                     
@@ -409,7 +372,7 @@ class VariableTannerGraph:
                     possibilites = permuter(vals, self.ffdim, current_value)
                     new_values = list(set(current_value).intersection(set(possibilites)))
                     vn.change_value(new_values)
-                    remove_changed_nodes(tree, vn, cn)
+                    tree, changed_nodes = remove_changed_nodes(tree, vn, cn)
                     
                     if len(current_value) > 1 and len(new_values) == 1:
                         resolved_vns += 1
@@ -417,6 +380,11 @@ class VariableTannerGraph:
 
                 # Adding node back into the tree        
                 #tree.add_node(cn)
+                # Add changed nodes back into tree
+                for node in changed_nodes:
+                    tree.add_node(node)
+
+                cns_explored.append(cn)
 
             if unresolved_vns==resolved_vns:
                 return np.array([i.value for i in self.vns])

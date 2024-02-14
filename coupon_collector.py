@@ -211,8 +211,8 @@ def decoding_errors_fer(k, n, dv, dc, graph, C, symbols, motifs, n_picks, read_l
                 if bec_decode:
                     decoded_values = graph.coupon_collector_erasure_decoder()
                 else:
-                    decoded_values = graph.coupon_collector_decoding()
-                    #decoded_values = graph.adaptive_coupon_collector_decoding()
+                    #decoded_values = graph.coupon_collector_decoding()
+                    decoded_values = graph.adaptive_coupon_collector_decoding()
             else:
                 decoded_values = symbols_read
             
@@ -320,7 +320,7 @@ if __name__ == "__main__":
     n_motifs, n_picks = 8, 4
     dv, dc, ffdim = 3, 9, 67
     k, n = 40, 60
-    L, M = 50, 1002
+    L, M = 10, 24
     read_length = 6
     read_lengths = np.arange(6,7)
     run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, code_class="sc_", read_lengths=read_lengths, saved_code=False, save_file=True)

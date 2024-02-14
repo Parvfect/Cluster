@@ -128,17 +128,17 @@ class ValueTree:
     def is_empty(self):
         return self.root==None or self.length==0
     
-    def add_node(self, cn_node):
+    def add_node(self, cn_node, starting_node=self.root):
 
         self.length += 1
 
         value = cn_node.total_symbol_possibilities
 
-        if self.root == None:
+        if starting_node == None:
             self.root = TreeNode(cn_node, value, None, None)
             return 
         
-        ptr = self.root
+        ptr = starting_node
 
         while True:
             ptr_symbol_poss = ptr.val
@@ -156,7 +156,7 @@ class ValueTree:
                     ptr.left = TreeNode(cn_node, value, None, None)
                     return
         
-    def remove_smallest_node(self):
+    def remove_smallest_node(self, starting_node=self.root):
         """Using to Traverse tree for bottom to top for CC Decoder """
 
         self.length-=1
@@ -164,8 +164,8 @@ class ValueTree:
             print("Tree is empty")
             return None
     
-        ptr1 = self.root
-        ptr2 = self.root
+        ptr1 = starting_node
+        ptr2 = starting_node
 
         if not ptr1.left:
             cn_node = self.root.cn
@@ -189,14 +189,29 @@ class ValueTree:
         return cn
     
     def remove_node(self, cn_node):
-        """Removes the node with the same value and identifier """
-        symbol_poss = cn_node.total_symbol_possibilites
+        """Removes cn_node from tree """
+    
+        def recursive_search(ptr, cn_node):
             
-        def recursive_search(root, cn_node, symbol_poss):
-            if root.left is cn_node:
-                ptr = root.left
+            if ptr.left is cn_node or ptr.right is cn_node:
+                if ptr.left is cn_node:
+                    ptr2 = ptr.left
+                    ptr.left = None
+                elif ptr.right is cn_node    
+                    ptr2 = ptr.right
+                    ptr.right = None
+            
+                if ptr2.left:
+                    self.add_node(ptr2.left)
+                if ptr2.right:
+                    self.add_node(ptr2.right)
                 
+                return ptr2
 
+            recursive_search(ptr.left, cn_node)
+            recursive_search(ptr.right, cn_node)
+
+        return recursive_search(self.root, cn_node)
 
     def find_vn_node(self, cn_node):
         """Uses both value and identifier to distinguish """

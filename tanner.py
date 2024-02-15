@@ -320,7 +320,7 @@ class VariableTannerGraph:
             
         return [i.value for i in self.vns]
     
-    def remove_changed_nodes(tree, vn, original_cn):
+    def remove_changed_nodes(self, tree, vn, original_cn):
         """Removes all the CNs that are not the originial from the tree, as the VNs symbol possibilities has been updated
         """
 
@@ -330,10 +330,10 @@ class VariableTannerGraph:
                 continue
             changed_nodes.append(cn)
             tree.remove_node(cn)
-        return tree, changed_nodes
+        return changed_nodes
 
 
-    def adaptive_coupon_collector_decoding(self, depth=20, max_iterations=10000):
+    def adaptive_coupon_collector_decoding(self, depth=100, max_iterations=10000):
         """ Decodes for the case of symbol possiblities for each variable node 
             utilising Belief Propagation - may be worth doing for BEC as well 
         """
@@ -350,9 +350,10 @@ class VariableTannerGraph:
 
         iterations = 0
         #print("Created Value Tree")
+        tree = None
 
         while True:
-            if tree.root is not None:
+            if tree and tree.root is not None:
                 for i in cns_explored:
                     tree.add_node(i)
             else:
@@ -360,7 +361,9 @@ class VariableTannerGraph:
             #print(iterations)
             #for i in range(len(self.cns)):
             cns_explored = []
+
             while not tree.is_empty() and len(cns_explored) < depth: # Change this condition to depth
+                print(resolved_vns)
                 cn = tree.remove_smallest_node()
                 vn_vals = [vn.get_value() for vn in cn.links]
                     
@@ -372,26 +375,23 @@ class VariableTannerGraph:
                     possibilites = permuter(vals, self.ffdim, current_value)
                     new_values = list(set(current_value).intersection(set(possibilites)))
                     vn.change_value(new_values)
-                    tree, changed_nodes = remove_changed_nodes(tree, vn, cn)
+                    changed_nodes = self.remove_changed_nodes(tree, vn, cn)
                     
                     if len(current_value) > 1 and len(new_values) == 1:
                         resolved_vns += 1
                         decoded_values[vn.identifier] = new_values
 
-                # Adding node back into the tree        
-                #tree.add_node(cn)
-                # Add changed nodes back into tree
-                for node in changed_nodes:
-                    tree.add_node(node)
+                    for node in changed_nodes:
+                        tree.add_node(node)
 
-                cns_explored.append(cn)
+            cns_explored.append(cn)
 
             if unresolved_vns==resolved_vns:
                 return np.array([i.value for i in self.vns])
         
             # No certainty gained after a whole iteration
-            if self.get_total_possibilities() == total_possibilites:
-                return [i.value for i in self.vns]
+            #if self.get_total_possibilities() == total_possibilites:
+            #    return [i.value for i in self.vns]
             
             total_possibilites = self.get_total_possibilities()
             

@@ -194,7 +194,7 @@ def get_parameters_sc_ldpc(n_motifs, n_picks, L, M, dv, dc, k, n, ffdim, display
     return Harr, H, G, graph, C, symbols, motifs, k, n
 
 
-def decoding_errors_fer(k, n, dv, dc, graph, C, symbols, motifs, n_picks, read_lengths = np.arange(1,12), decoding_failures_parameter=2, max_iterations=2000, iterations=5, uncoded=False, bec_decode=False, label=None, code_class=""):
+def decoding_errors_fer(k, n, dv, dc, graph, C, symbols, motifs, n_picks, read_lengths = np.arange(1,12), decoding_failures_parameter=10, max_iterations=2000, iterations=5, uncoded=False, bec_decode=False, label=None, code_class=""):
     """ Returns the frame error rate curve - for same H, same G, same C"""
 
     frame_error_rate = []
@@ -322,5 +322,5 @@ if __name__ == "__main__":
     k, n = 40, 60
     L, M = 10, 24
     read_length = 6
-    read_lengths = np.arange(6,7)
-    run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, code_class="sc_", read_lengths=read_lengths, saved_code=False, save_file=True)
+    read_lengths = np.arange(10,11)
+    run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, code_class="", read_lengths=read_lengths, saved_code=False, save_file=False)

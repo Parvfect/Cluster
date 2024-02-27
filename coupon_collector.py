@@ -323,4 +323,4 @@ if __name__ == "__main__":
     L, M = 50, 1002
     read_length = 6
     read_lengths = np.arange(5,6)
-    run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, code_class="sc_", read_lengths=read_lengths, saved_code=False, save_file=False)
+    run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, code_class="", read_lengths=read_lengths, saved_code=False, save_file=False)

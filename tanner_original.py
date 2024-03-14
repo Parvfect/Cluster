@@ -1,6 +1,8 @@
 
 
 import numpy as np
+from networkx.algorithms import bipartite
+import networkx as nx
 import matplotlib.pyplot as plt
 import time
 import row_echleon as r
@@ -10,11 +12,8 @@ from sklearn.preprocessing import normalize
 from pstats import Stats
 import re
 import sys
-from data_structures import VariableNode, CheckNode, ValueTree, Link
-
 
 def permuter(arr, ffield, vn_value):
-    """Permutes the VNs to generate symbol possibilities """
 
     possibilities = set(arr[0])
     new_possibilities = set()
@@ -22,8 +21,8 @@ def permuter(arr, ffield, vn_value):
         for k in possibilities:
             for j in arr[i]:
                 new_possibilities.add((j+k) % ffield)
-            if len(new_possibilities) == ffield:
-                return vn_value
+                if len(new_possibilities) == ffield:
+                    return vn_value
         possibilities = new_possibilities 
         new_possibilities = set()
     
@@ -38,7 +37,7 @@ def perform_convolutions(arr_pd):
     """ Combines all the Probability distributions within the array using the Convolution operator
     
     Args:
-        arr_pd (arr): Array of Discrete Probability Distributions
+        arr_pd (arr): Array of Discrete P   robability Distributions
     
     Returns:
         conv_pd (arr): Combined Probability Distributions after taking convolution over all of the pdf
@@ -50,6 +49,53 @@ def perform_convolutions(arr_pd):
         pdf = conv_circ(pdf, i)
 
     return pdf
+
+
+class Node:
+
+    def __init__(self, no_connections, identifier):
+        self.value = 0
+        self.links = np.zeros(no_connections, dtype=int)
+        self.identifier = identifier
+
+    def add_link(self, node):
+        """ Adds a link to the node. Throws an error if the node is full """
+        
+        # Check if node is full
+        #if np.all(self.links):
+         #   raise ValueError("Node is full")
+
+        # Add to empty link 
+        for (i,j) in enumerate(self.links):
+            if not j:
+                self.links[i] = node.identifier
+                break
+        
+        return self.links
+    
+    def get_links(self):
+        return self.links
+
+    def replace_link(self, node, index):
+        """ Replaces a link with another link """
+        self.links[index] = node
+        return self.links
+    
+class CheckNode(Node):
+
+    def __init__(self, dc, identifier):
+        super().__init__(dc, identifier)
+    
+class VariableNode(Node):
+    def __init__(self, dv, identifier):
+        super().__init__(dv, identifier)
+
+
+class Link(Node):
+    def __init__(self, cn, vn, value):
+        self.cn = cn
+        self.vn = vn
+        self.value = value
 
 class VariableTannerGraph:
     """ Initializes empty, on establishing connections creates H and forms links """
@@ -74,7 +120,6 @@ class VariableTannerGraph:
         self.n = n
         self.ffdim = ffdim
         self.links = {}
-        self.vn_values = [i.value for i in self.vns]
 
     def add_link(self, cn_index, vn_index, link_value):
         """ Adds a link to the links data structure """
@@ -92,10 +137,10 @@ class VariableTannerGraph:
         self.links[(cn_index, vn_index)][val_index] = new_value
 
     def get_vn_value(self, vn_index):
-        return self.vns[vn_index].get_value()
+        return self.vns[vn_index].value
 
     def get_cn_value(self, cn_index):
-        return self.cns[cn_index].get_value()
+        return self.cns[cn_index].value
 
     def establish_connections(self, Harr=None):
         """ Establishes connections between variable nodes and check nodes """
@@ -131,7 +176,7 @@ class VariableTannerGraph:
 
     def get_connections(self):
         """ Returns the connections in the Tanner Graph """
-        return [(i.get_value(), j) for i in self.cns for j in i.links]
+        return [(i.identifier, j) for i in self.cns for j in i.links]
 
     def get_cn_link_values(self, cn):
         """ Returns the values of the link weights for the cn as an array"""
@@ -140,22 +185,39 @@ class VariableTannerGraph:
             vals.append(self.get_link_weight(cn.identifier, i))
 
         return vals
+
+    def visualise(self):
+        """ Visualise Tanner Graph """
+        G = nx.Graph()
+
+        rows = len(self.cns)
+        cols = len(self.vns)
+
+        # For each row add a check node
+        for i in range(rows):
+            G.add_node(i, bipartite=0)
+
+        # For each column add a variable node
+        for i in range(cols):
+            G.add_node(i + rows, bipartite=1)
+        
+        # Utilise the links to add edges
+        for (i,j) in enumerate(self.cns):
+            for k in j.links:
+                G.add_edge(i, k + rows, weight=1)
     
-    def get_total_possibilities(self):
-        """ Returns the total number of possbilities in all the cn's - for the CC Decoder"""
-        return sum([i.get_total_symbol_possibilities() for i in self.cns])
     
-    def get_no_unresolved_vns(self):
-        """ Returns the total number of unresolved vns (CC Decoder)"""
-        return len([i for i in self.vns if i.get_total_symbol_possibilities() > 1])
-    
+        nx.draw(G, with_labels=True)
+        plt.show()
+        return G
+
     def assign_values(self, arr):   
         """Assigns values to the VNs based on input pre decoding """
 
         assert len(arr) == len(self.vns) 
 
         for i in range(len(arr)):
-            self.vns[i].change_value(arr[i])
+            self.vns[i].value = arr[i]
 
     def get_max_prob_codeword(self, P, GF):
         """Calculates the most possible Codeword using the probability likelihoods established in the VN's and influenced by the initial probability likelihoods.
@@ -206,23 +268,25 @@ class VariableTannerGraph:
         for i,j in enumerate(cn.links):
             self.update_link_weight(cn_index, j, new_vals[i])
 
-    def vn_update_qspa(self):
-        """ VN Update for the QSPA Decoder. For each CN, performs convolutions for individual VN's as per the remaining links and updates the individual link values after finishing each link. Repeats for all the CN's """
+    def cn_update_qspa(self):
+        """ CN Update for the QSPA Decoder. For each CN, performs convolutions for individual VN's as per the remaining links and updates the individual link values after finishing each link. Repeats for all the CN's """
         
         for i in self.cns:
             cn_index = i.identifier
             vns = i.links
             new_pdfs = []
             for j in vns:
-                conv_indices = vns[vns!=j]
-                vals = [self.get_link_weight(cn_index, t) for t in conv_indices]
-                pdf = perform_convolutions(vals)
-                new_pdfs.append(pdf[self.idx_shuffle])
-                #self.update_link_weight(i,j,pdf[idx_shuffle]) 
+                conv_indices = [idx for idx in vns if idx != j]
+                pdf = conv_circ(self.get_link_weight(cn_index, conv_indices[0]), self.get_link_weight(cn_index, conv_indices[1]))
+                for indice in conv_indices[2:]:
+                    pdf = conv_circ(pdf, self.get_link_weight(cn_index, indice))
+                #new_pdfs.append(pdf[self.idx_shuffle])
+                #self.update_link_weight(i,j,pdf[self.idx_shuffle]) 
+        
             self.update_cn_links(i, new_pdfs)
             
 
-    def cn_update_qspa(self):
+    def vn_update_qspa(self):
         """ Updates the CN as per the QSPA Decoding. Conditional Probability of a Symbol being favoured yadayada """
 
         copy_links = self.links.copy()
@@ -234,10 +298,14 @@ class VariableTannerGraph:
                     for t in j.links[j.links!=i]:
                         copy_links[(i,vn_index)][a] *= self.get_link_weight(t, vn_index)[a]
 
-                    copy_links[i, vn_index] = self.normalize(copy_links[(i,vn_index)])    
+                    sum_copy_links = np.einsum('i->', copy_links[i, vn_index]) # Seems to be twice as fast or smth
+                    #sum_copy_links = np.sum(copy_links[i, vn_index])
+                    #sum_copy_links = sum(copy_links[i, vn_index])
+                    copy_links[i, vn_index] = copy_links[i, vn_index]/sum_copy_links
+                    
         self.links = copy_links
 
-    def qspa_decoding(self, H, GF, max_iterations=10):
+    def qspa_decoding(self, symbols_likelihood_arr, H, GF, max_iterations=50):
 
         self.GF = GF
               
@@ -247,24 +315,40 @@ class VariableTannerGraph:
         ])
         
         # Initial likelihoods
-        self.P = [i.value for i in self.vns]
+        self.P = symbols_likelihood_arr
 
-        self.initialize_vn_links(self.P)
         
         copy_links = self.links.copy()
-        max_prob_codeword = self.get_max_prob_codeword(self.P, GF)
+        prev_max_prob_codeword = self.get_max_prob_codeword(self.P, GF)
 
-        for i in range(max_iterations):
+        # Set copy links to intiialized values - or VN to cn links as opposed to CN to VN Links
+        self.initialize_vn_links(self.P)
+        
+
+        iterations = 0
+
+        #for i in range(max_iterations):
+        while(True):
             
-            self.vn_update_qspa()
+            self.cn_update_qspa(copy_links)
 
             max_prob_codeword = self.get_max_prob_codeword(self.P, GF)
-            if self.validate_codeword(H, GF, max_prob_codeword):
+
+            parity = not np.matmul(H, max_prob_codeword).any()
+            if parity:
                 print("Decoding converges")
                 return max_prob_codeword
 
-            self.cn_update_qspa()
-        
+            self.vn_update_qspa()
+
+            if np.array_equal(max_prob_codeword, prev_max_prob_codeword) or iterations > max_iterations:
+                break
+            
+            prev_max_prob_codeword = max_prob_codeword
+
+            iterations+=1
+            print(f"Iteration {iterations}")
+
         print("Decoding does not converge")
         return max_prob_codeword
     
@@ -273,123 +357,44 @@ class VariableTannerGraph:
             utilising Belief Propagation - may be worth doing for BEC as well 
         """
         
-        unresolved_vns = self.get_no_unresolved_vns()
-        iterations = 0
+        unresolved_vns = sum([1 for i in self.vns if len(i.value) > 1 ])
         resolved_vns = 0
-        total_possibilites = self.get_total_possibilities()
-        #print(total_possibilites)
-        decoded_values = [i.get_value() for i in self.vns]
+        total_possibilites = sum([len(i.value) for i in self.vns])
         
-        if total_possibilites >= 67*len(self.vns):
-            return np.random.rand(2, len(self.vns))
-
         while True:
             # Iterating through all the check nodes
             for i in self.cns:
                 
-                vn_vals = [j.get_value() for j in i.links]
+                vn_vals = [self.vns[j].value for j in i.links]
                 
                 for j in i.links:
                 
                     vals = vn_vals.copy()
-                    current_value = j.get_value()
+                    current_value = self.vns[j].value
+                    #vals = self.remove_from_array(vals, current_value)
                     vals.remove(current_value)
 
                     possibilites = permuter(vals, self.ffdim, current_value)
-                    new_values = list(set(current_value).intersection(set(possibilites)))
-                    j.change_value(new_values)
+                    new_values = set(current_value).intersection(set(possibilites))
+                    self.vns[j].value = list(new_values)
                     
+                    """
+                    if len(new_values) < len(current_value) and len(possibilites) > 1:
+                        print("I reached here")
+                    """
                     if len(current_value) > 1 and len(new_values) == 1:
                         resolved_vns += 1
-                        decoded_values[j.identifier] = new_values
                     
+                decoded_values = [i.value for i in self.vns]
+
                 if unresolved_vns ==  resolved_vns and sum([len(i) for i in decoded_values]) == len(decoded_values):
-                    return np.array([i.get_value() for i in self.vns])
+                    return np.array([i.value for i in self.vns])
             
-            if self.get_total_possibilities() == total_possibilites:
-                return [i.get_value() for i in self.vns]
+            if sum([len(i.value) for i in self.vns]) == total_possibilites:
+                return [i.value for i in self.vns]
             
-            iterations += 1
+            total_possibilites = sum([len(i.value) for i in self.vns])
             
-            total_possibilites = self.get_total_possibilities()
-            
-        return [i.value for i in self.vns]
-    
-    def remove_changed_nodes(self, tree, vn, original_cn):
-        """Removes all the CNs that are not the originial from the tree, as the VNs symbol possibilities has been updated
-        """
-
-        changed_nodes = []
-        for cn in vn.links:
-            if cn is original_cn:
-                continue
-            changed_nodes.append(cn)
-            tree.remove_node(cn)
-        return changed_nodes
-
-
-    def adaptive_coupon_collector_decoding(self, depth=100, max_iterations=10000):
-        """ Decodes for the case of symbol possiblities for each variable node 
-            utilising Belief Propagation - may be worth doing for BEC as well 
-        """
+            prev_resolved_vns = resolved_vns   
         
-        unresolved_vns = self.get_no_unresolved_vns()
-        resolved_vns = 0
-        total_possibilites = self.get_total_possibilities()
-        decoded_values = [vn.get_value() for vn in self.vns]
-        
-        # Adding condition - in case we know for sure we cannot decode
-        if total_possibilites >= 67*len(self.vns):
-            #print("I Enter here")
-            return np.random.rand(2, len(self.vns))
-
-        iterations = 0
-        #print("Created Value Tree")
-        tree = None
-
-        while True:
-            if tree and tree.root is not None:
-                for i in cns_explored:
-                    tree.add_node(i)
-            else:
-                tree = ValueTree(self.cns)
-            #print(iterations)
-            #for i in range(len(self.cns)):
-            cns_explored = []
-
-            while not tree.is_empty() and len(cns_explored) < depth: # Change this condition to depth
-                print(resolved_vns)
-                cn = tree.remove_smallest_node()
-                vn_vals = [vn.get_value() for vn in cn.links]
-                    
-                for vn in cn.links:
-                    vals = vn_vals.copy()
-                    current_value = vn.get_value()
-                    vals.remove(current_value)
-
-                    possibilites = permuter(vals, self.ffdim, current_value)
-                    new_values = list(set(current_value).intersection(set(possibilites)))
-                    vn.change_value(new_values)
-                    changed_nodes = self.remove_changed_nodes(tree, vn, cn)
-                    
-                    if len(current_value) > 1 and len(new_values) == 1:
-                        resolved_vns += 1
-                        decoded_values[vn.identifier] = new_values
-
-                    for node in changed_nodes:
-                        tree.add_node(node)
-
-            cns_explored.append(cn)
-
-            if unresolved_vns==resolved_vns:
-                return np.array([i.value for i in self.vns])
-        
-            # No certainty gained after a whole iteration
-            #if self.get_total_possibilities() == total_possibilites:
-            #    return [i.value for i in self.vns]
-            
-            total_possibilites = self.get_total_possibilities()
-            
-            iterations+=1
-    
         return [i.value for i in self.vns]

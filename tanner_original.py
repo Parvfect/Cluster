@@ -1,8 +1,6 @@
 
 
 import numpy as np
-from networkx.algorithms import bipartite
-import networkx as nx
 import matplotlib.pyplot as plt
 import time
 import row_echleon as r

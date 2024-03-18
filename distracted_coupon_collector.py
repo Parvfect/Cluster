@@ -12,7 +12,6 @@ import random
 import matplotlib.pyplot as plt
 from pstats import Stats
 import re
-from cProfile import Profile
 from coupon_collector import get_parameters, get_parameters_sc_ldpc
 from tanner_qspa import TannerQSPA
 from coupon_collector import generate_run_save_file
@@ -270,20 +269,14 @@ def run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, P, code_class="", iter
 
 
 if __name__ == "__main__":
-    with Profile() as prof:
-        n_motifs, n_picks = 8, 4
-        dv, dc, ffdim, P = 3, 9, 67, 2 * 0.038860387943791645
-        k, n = 22, 33
-        L, M = 12, 501
-        read_length = 6
-        read_lengths = np.arange(10,11)
+    n_motifs, n_picks = 8, 4
+    dv, dc, ffdim, P = 3, 9, 67, 2 * 0.038860387943791645
+    k, n = 22, 33
+    L, M = 12, 501
+    read_length = 6
+    read_lengths = np.arange(10,11)
 
 
-        #run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, P, code_class="",  uncoded=False, zero_codeword=False, bec_decoder=False, graph_decoding=False, read_lengths=read_lengths)
-        run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, P, code_class="",  uncoded=False, zero_codeword=True, bec_decoder=False, graph_decoding=True, read_lengths=read_lengths)
-    (
-        Stats(prof)
-        .strip_dirs()
-        .sort_stats("cumtime")
-        .print_stats(10)
-    )                                                                                                                                                                                 
+    #run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, P, code_class="",  uncoded=False, zero_codeword=False, bec_decoder=False, graph_decoding=False, read_lengths=read_lengths)
+    run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, P, code_class="",  uncoded=False, zero_codeword=True, bec_decoder=False, graph_decoding=True, read_lengths=read_lengths)
+                                                                                                    

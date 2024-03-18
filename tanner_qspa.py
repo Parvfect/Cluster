@@ -64,7 +64,7 @@ class TannerQSPA(VariableTannerGraph):
             prev_max_prob_codeword = max_prob_codeword
 
             iterations+=1
-            print(f"Iteration {iterations}")
+            #print(f"Iteration {iterations}")
 
         print("Decoding does not converge")
         return max_prob_codeword

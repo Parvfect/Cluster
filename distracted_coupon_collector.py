@@ -280,7 +280,7 @@ if __name__ == "__main__":
 
 
         #run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, P, code_class="",  uncoded=False, zero_codeword=False, bec_decoder=False, graph_decoding=False, read_lengths=read_lengths)
-        run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, P, code_class="sc_",  uncoded=False, zero_codeword=True, bec_decoder=False, graph_decoding=True, read_lengths=read_lengths)
+        run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, P, code_class="",  uncoded=False, zero_codeword=True, bec_decoder=False, graph_decoding=True, read_lengths=read_lengths)
     (
         Stats(prof)
         .strip_dirs()

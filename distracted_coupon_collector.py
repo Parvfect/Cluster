@@ -271,10 +271,10 @@ def run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, P, code_class="", iter
 if __name__ == "__main__":
     n_motifs, n_picks = 8, 4
     dv, dc, ffdim, P = 3, 9, 67, 2 * 0.038860387943791645
-    k, n = 22, 33
-    L, M = 50, 501
+    k, n = 40, 60
+    L, M = 50, 252
     read_length = 6
-    read_lengths = np.arange(10,11)
+    read_lengths = np.arange(11,12)
 
 
     #run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, P, code_class="",  uncoded=False, zero_codeword=False, bec_decoder=False, graph_decoding=False, read_lengths=read_lengths)

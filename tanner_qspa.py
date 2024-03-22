@@ -53,6 +53,7 @@ class TannerQSPA(VariableTannerGraph):
 
             parity = not np.matmul(H, max_prob_codeword).any()
             if parity:
+                print(f"Iteration {iterations}")
                 print("Decoding converges")
                 return max_prob_codeword
 
@@ -64,7 +65,6 @@ class TannerQSPA(VariableTannerGraph):
             prev_max_prob_codeword = max_prob_codeword
 
             iterations+=1
-            #print(f"Iteration {iterations}")
 
         print("Decoding does not converge")
         return max_prob_codeword

@@ -266,12 +266,10 @@ def decoding_errors(k, n, dv, dc, P, H, G, GF, graph, C, symbols, n_motifs, n_pi
             decoding_failures+=1
         
         iterations += 1
-        
-    print(f"Iterations {iterations} Failures {decoding_failures}")
     
     write_path = os.path.join(os.environ['HOME'], "results.txt")
     with open(write_path, "a") as f:
-        f.write(f"Iterations {iterations} Failures {decoding_failures}")
+        f.write(f"\nIterations {iterations} Failures {decoding_failures}")
 
 
 def run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, P, code_class="", iterations=10, cc_decoder=False, bec_decoder=False, uncoded=False, read_lengths=np.arange(1,20), max_iter=10,  zero_codeword=False, graph_decoding=False, label=None):

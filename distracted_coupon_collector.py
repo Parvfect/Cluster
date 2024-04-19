@@ -165,7 +165,7 @@ def get_symbol_likelihood(n_picks, motif_occurences, P, pop=True):
         norm_factor = 1/sum(likelihoods)
         likelihoods = [norm_factor*i for i in likelihoods]
         
-    # Precision - summing up to 0.9999999999999997
+    # Precision - summing up to 0.99..
     assert sum(likelihoods) >= 0.99 and sum(likelihoods) < 1.01
 
     return likelihoods
@@ -228,7 +228,10 @@ def decoding_errors_fer(k, n, dv, dc, P, H, G, GF, graph, C, symbols, n_motifs, 
         assert counter == (iterations - decoding_failures)
         error_rate = (iterations - counter)/iterations
         frame_error_rate.append(error_rate)
-    
+
+    with open("$HOME/results.txt", "w") as f:
+        f.write(f"These are the results \n {frame_error_rate}")
+
     if plot:
         plt.plot(read_lengths, frame_error_rate, 'o')
         plt.plot(read_lengths, frame_error_rate, label=label)
@@ -270,13 +273,21 @@ def run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, P, code_class="", iter
 
 if __name__ == "__main__":
     n_motifs, n_picks = 8, 4
+
+    # dv - Variable Node Connections
+    # dc - Check Node Connections
+    # ffdim - Finite field Dimensions
+    # P - Interference Probability
     dv, dc, ffdim, P = 3, 9, 67, 2 * 0.038860387943791645
-    k, n = 2000, 3000
+    # n = Number of Variable Nodes, k = Number of Variable Nodes - Number of Check Nodes 
+    k, n = 300, 450
+    # SC LDPC Protograph Parameters - L, M
     L, M = 15, 51
     read_length = 6
-    read_lengths = np.arange(13, 14)
+    read_lengths = np.arange(16, 17)
 
 
     #run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, P, code_class="",  uncoded=False, zero_codeword=False, bec_decoder=False, graph_decoding=False, read_lengths=read_lengths)
-    run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, P, code_class="",  uncoded=False, zero_codeword=False, bec_decoder=False, graph_decoding=False, read_lengths=read_lengths)
+    run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, P, code_class="sc_",  uncoded=False, zero_codeword=True, bec_decoder=False, graph_decoding=True,  read_lengths=read_lengths)
                                                                                                     
+

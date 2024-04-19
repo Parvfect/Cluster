@@ -196,7 +196,7 @@ def simulate_reads(C, symbols, read_length, P, n_motifs, n_picks):
 
     return likelihood_arr
 
-def decoding_errors_fer(k, n, dv, dc, P, H, G, GF, graph, C, symbols, n_motifs, n_picks, decoder=None, decoding_failures_parameter=100, max_iterations=100, iterations=50, uncoded=False, bec_decoder=False, label=None, code_class="", read_lengths=np.arange(1,20), plot=True):
+def decoding_errors_fer(k, n, dv, dc, P, H, G, GF, graph, C, symbols, n_motifs, n_picks, decoder=None, decoding_failures_parameter=10, max_iterations=10, iterations=50, uncoded=False, bec_decoder=False, label=None, code_class="", read_lengths=np.arange(1,20), plot=True):
 
     frame_error_rate = []
     max_iterations = max_iterations
@@ -280,7 +280,7 @@ if __name__ == "__main__":
     # P - Interference Probability
     dv, dc, ffdim, P = 3, 9, 67, 2 * 0.038860387943791645
     # n = Number of Variable Nodes, k = Number of Variable Nodes - Number of Check Nodes 
-    k, n = 300, 450
+    k, n = 30, 45
     # SC LDPC Protograph Parameters - L, M
     L, M = 15, 51
     read_length = 6

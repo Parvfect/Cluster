@@ -231,7 +231,7 @@ def decoding_errors_fer(k, n, dv, dc, P, H, G, GF, graph, C, symbols, n_motifs, 
         frame_error_rate.append(error_rate)
 
     write_path = os.path.join(os.environ['HOME'], "results.txt")
-    with open("$HOME/results.txt", "a") as f:
+    with open(write_path, "a") as f:
         f.write(f"These are the results \n {frame_error_rate}")
 
     if plot:
@@ -282,7 +282,7 @@ if __name__ == "__main__":
     # P - Interference Probability
     dv, dc, ffdim, P = 3, 9, 67, 2 * 0.038860387943791645
     # n = Number of Variable Nodes, k = Number of Variable Nodes - Number of Check Nodes 
-    k, n = 30, 45
+    k, n = 12, 18
     # SC LDPC Protograph Parameters - L, M
     L, M = 15, 51
     read_length = 6

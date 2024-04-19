@@ -2,6 +2,7 @@
 from qspa_conv import hw_likelihoods, QSPADecoder
 import utils
 import galois
+import os
 import row_echleon as r
 import numpy as np
 from itertools import combinations
@@ -229,7 +230,8 @@ def decoding_errors_fer(k, n, dv, dc, P, H, G, GF, graph, C, symbols, n_motifs, 
         error_rate = (iterations - counter)/iterations
         frame_error_rate.append(error_rate)
 
-    with open("$HOME/results.txt", "w") as f:
+    write_path = os.path.join(os.environ['HOME'], "results.txt")
+    with open("$HOME/results.txt", "a") as f:
         f.write(f"These are the results \n {frame_error_rate}")
 
     if plot:

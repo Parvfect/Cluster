@@ -248,7 +248,7 @@ def decoding_errors_fer(k, n, dv, dc, P, H, G, GF, graph, C, symbols, n_motifs, 
 
     return frame_error_rate
 
-def decoding_errors(k, n, dv, dc, P, H, G, GF, graph, C, symbols, n_motifs, n_picks, decoder=None, decoding_failures_parameter=10, max_iterations=10, iterations=50, uncoded=False, bec_decoder=False, label=None, code_class="", read_length=14, plot=True):
+def decoding_errors(k, n, dv, dc, P, H, G, GF, graph, C, symbols, n_motifs, n_picks, decoder=None, decoding_failures_parameter=10, max_iterations=500, iterations=50, uncoded=False, bec_decoder=False, label=None, code_class="", read_length=14, plot=True):
 
     frame_error_rate = []
     max_iterations = max_iterations
@@ -267,6 +267,8 @@ def decoding_errors(k, n, dv, dc, P, H, G, GF, graph, C, symbols, n_motifs, n_pi
         
         iterations += 1
     
+    print(f"\nIterations {iterations} Failures {decoding_failures}")
+
     write_path = os.path.join(os.environ['HOME'], "results.txt")
     with open(write_path, "a") as f:
         f.write(f"\nIterations {iterations} Failures {decoding_failures}")
@@ -299,11 +301,11 @@ if __name__ == "__main__":
     # P - Interference Probability
     dv, dc, ffdim, P = 3, 9, 67, 2 * 0.038860387943791645
     # n = Number of Variable Nodes, k = Number of Variable Nodes - Number of Check Nodes 
-    k, n = 12, 18
+    k, n = 200, 300
     # SC LDPC Protograph Parameters - L, M
     L, M = 15, 51
     read_length = 6
-    read_lengths = np.arange(16, 17)
+    read_lengths = np.arange(10, 11)
 
 
     #run_fer(n_motifs, n_picks, dv, dc, k, n, L, M, ffdim, P, code_class="",  uncoded=False, zero_codeword=False, bec_decoder=False, graph_decoding=False, read_lengths=read_lengths)

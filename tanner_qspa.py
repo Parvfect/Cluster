@@ -1,6 +1,16 @@
 
-from tanner_original import VariableTannerGraph, conv_circ
+from tanner import VariableTannerGraph, conv_circ
 import numpy as np
+import random
+
+def get_max_symbol(prob_arr):
+    max_val = np.max(prob_arr)
+
+    # Numerical issues ? Strict Equality?
+    max_indices = [i for i, val in enumerate(prob_arr) if val == max_val]
+    #print(prob_arr)
+    #print(max_indices)
+    return random.choice(max_indices)
 
 class TannerQSPA(VariableTannerGraph):
 
@@ -15,7 +25,7 @@ class TannerQSPA(VariableTannerGraph):
         for vn in self.vns:
             vn_index = vn.identifier
             for cn_index in vn.links:
-                self.vn_links[(cn_index, vn_index)] = P[vn_index]
+                self.vn_links[(cn_index, vn_index)] = P[vn_index].copy()
 
     def initialize_cn_links(self):
         """ Initializes CN Links"""
@@ -47,26 +57,38 @@ class TannerQSPA(VariableTannerGraph):
         #for i in range(max_iterations):
         while(True):
             
+            
             self.cn_update()
 
+            #print()
+            #print(f"Iteration {iterations+1}")
+            #print()
             max_prob_codeword = self.get_max_prob_codeword(symbol_likelihood_arr, GF)
+            #print(max_prob_codeword)
+
+            #print(sum(random.choice(list(self.cn_links.items()))[1]))
 
             parity = not np.matmul(H, max_prob_codeword).any()
+            
+            
             if parity:
-                print(f"Iteration {iterations}")
-                print("Decoding converges")
+                #print("Decoding converges")
                 return max_prob_codeword
+                
 
             self.vn_update(symbol_likelihood_arr)
+            #print(sum(random.choice(list(self.vn_links.items()))[1]))
 
+            
             if np.array_equal(max_prob_codeword, prev_max_prob_codeword) or iterations > max_iterations:
                 break
             
             prev_max_prob_codeword = max_prob_codeword
 
             iterations+=1
+            #print(f"Iteration {iterations}")
 
-        print("Decoding does not converge")
+        #print("Decoding does not converge")
         return max_prob_codeword
     
     def get_max_prob_codeword(self, P, GF):
@@ -95,7 +117,9 @@ class TannerQSPA(VariableTannerGraph):
                     probs[a] *= self.cn_links[(cn, vn_index)][a]
             
             # Most likely symbol is the Symbol with the highest probability
-            z[vn_index] = np.argmax(probs) 
+            #print(probs)
+            z[vn_index] = get_max_symbol(probs)
+            #print(z)
         
         return GF(z.astype(int))
 
@@ -124,6 +148,7 @@ class TannerQSPA(VariableTannerGraph):
 
                 # Updating the CN Link weight with the conv value
                 self.cn_links[(cn_index, vn)] = pdf[self.idx_shuffle]
+                #print(sum(self.cn_links[(cn_index, vn)]))
 
     def vn_update(self, P):
         """ Updates the CN as per the QSPA Decoding. Conditional Probability of a Symbol being favoured yadayada """
@@ -131,25 +156,30 @@ class TannerQSPA(VariableTannerGraph):
         # Use the CN links to update the VN links by taking the favoured probabilities
         
         # Iterating through all the Symbols
-        for a in range(self.GF.order):
-
-            # For each VN
-            for vn in self.vns:
-                vn_index = vn.identifier
+        
+        # For each VN
+        for vn in self.vns:
+            vn_index = vn.identifier
+            
+            for cn in vn.links:
+                for a in range(self.GF.order):
                 
-                for cn in vn.links:
-                    
                     self.vn_links[(cn, vn_index)][a] = P[vn_index][a]
 
                     for t in vn.links:
-
+                        # Iterating through all the other cns besides selected
                         if t == cn:
                             continue
 
                         self.vn_links[(cn, vn_index)][a] *= self.cn_links[(t, vn_index)][a]
 
-                    sum_copy_links = np.einsum('i->', self.vn_links[(cn, vn_index)])
-                    self.vn_links[(cn, vn_index)] = self.vn_links[(cn, vn_index)]/sum_copy_links
+            
+                # Normalizing
+                #sum_copy_links = np.einsum('i->', self.vn_links[(cn, vn_index)])
+                sum_copy_links = np.sum(self.vn_links[(cn, vn_index)])
+                self.vn_links[(cn, vn_index)] = self.vn_links[(cn, vn_index)]/sum_copy_links
+
+
                     
 
 
